@@ -1,5 +1,5 @@
 ---
-title: 'Meu professor de Redes tinha razão (e eu demorei 5 anos pra perceber)'
+title: Meu professor de Redes tinha razão (e eu demorei 5 anos pra perceber)
 date: '2025-12-22'
 description: >-
   Da aula de Redes ignorada na faculdade ao servidor caseiro: como organizei
@@ -34,7 +34,7 @@ Foi aí que decidi: **vou organizar essa rede**.
 
 Depois de muito estudo e experimentação, cheguei nessa estrutura:
 
-![Diagrama da rede doméstica](/images/posts/homelab-network-diagram.jpg)
+![Diagrama da rede doméstica](https://br-se1.magaluobjects.com/ranimontagna-blog-images/blog-content/0c6fa0cd-12d9-440b-88d4-ce52d6345e59.webp)
 
 **Segmentação por função:**
 - `.2 - .19` → Infraestrutura (servidores, DNS, automação)
@@ -64,14 +64,6 @@ E é exatamente aqui que entra a mágica.
 O **Pi-hole** é um servidor DNS que roda na sua rede local. Toda requisição DNS passa por ele antes de ir pra internet. E a sacada é simples: ele tem uma lista gigante de domínios conhecidos por servir anúncios e rastreadores.
 
 Quando alguém na rede tenta acessar `ads.facebook.com` ou `tracking.google-analytics.com`, o Pi-hole simplesmente... não responde. O anúncio não carrega. O rastreador não funciona.
-
-**O resultado na minha rede em 24 horas:**
-
-![Dashboard do Pi-hole](/images/posts/pihole-dashboard.png)
-
-- ✅ **45.871** requisições DNS processadas
-- 🚫 **8.320** bloqueadas (18.1%)
-- 📋 **1.3 milhão** de domínios na blocklist
 
 Isso significa: YouTube com menos anúncios, apps sem banners invasivos, e smartphones que param de "ligar pra casa" de 5 em 5 minutos.
 
@@ -121,4 +113,4 @@ Se você também dormia nas aulas de Redes... talvez seja hora de acordar. 😉
 
 ---
 
-*E você, tem algum projeto de homelab ou ideia de organizar melhor sua rede? Conta aí nos comentários!*
+*E você, tem algum projeto de homelab ou ideia de organizar melhor sua rede? Ou a minha? Me chama e vamos bater um papo!*
