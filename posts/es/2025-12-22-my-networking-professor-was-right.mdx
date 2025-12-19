@@ -1,0 +1,114 @@
+---
+title: Mi profesor de Redes tenía razón (y tardé 5 años en darme cuenta)
+date: '2025-12-22'
+description: >-
+  De la clase de Redes ignorada en la universidad al servidor casero: cómo
+  organicé mi red doméstica con Pi-hole, Proxmox y VPN.
+tags:
+  - homelab
+  - redes
+  - proxmox
+  - pihole
+  - self-hosting
+published: false
+---
+En la universidad, lo confieso: las clases de Redes de Computadoras eran aquellas a las que menos atención prestaba. IP, máscara de subred, DNS... "Esto es cosa de infraestructura, un desarrollador no necesita saber esto", pensaba yo.
+
+Años después, aquí estoy yo — con un servidor funcionando en casa, gestionando IPs como si fuera lo más natural del mundo.
+
+---
+
+## ¿Qué me hizo cambiar de idea?
+
+Todo comenzó cuando la cantidad de dispositivos en casa explotó. Computadora, notebook, celulares, TV, lámparas inteligentes, Echo Dots, aire acondicionado... de repente tenía decenas de cosas conectadas y ningún control sobre nada.
+
+Quería acceder a archivos del PC desde el celular, controlar la casa desde cualquier lugar, y entender por qué mi internet parecía lenta incluso con una buena conexión. ¿La respuesta? Un desorden de dispositivos compitiendo por ancho de banda sin ninguna organización.
+
+Fue entonces cuando decidí: **voy a organizar esta red**.
+
+---
+
+## La Arquitectura General
+
+Después de mucho estudio y experimentación, llegué a esta estructura:
+
+![Diagrama de la red doméstica](https://br-se1.magaluobjects.com/ranimontagna-blog-images/blog-content/0c6fa0cd-12d9-440b-88d4-ce52d6345e59.webp)
+
+**Segmentación por función:**
+- `.2 - .19` → Infraestructura (servidores, DNS, automatización)
+- `.20 - .29` → Personas (PCs, celulares, TV)
+- `.50 - .59` → IoT Hubs (Echo Dots, aire acondicionado)
+- `.60 - .99` → IoT Puntas (lámparas, smart plugs)
+- `.100+` → DHCP para visitantes
+
+¿Parece exagerado? Quizás. Pero cuando algo da problema, sé **exactamente** dónde buscar. Y más importante: consigo configurar reglas específicas para cada "tipo" de dispositivo.
+
+---
+
+## DNS: El corazón invisible de internet
+
+Aquí necesito hacer una pausa para explicar algo que ignoraba completamente: **DNS**.
+
+Cada vez que escribes "google.com" en el navegador, tu computadora no tiene idea de lo que es eso. Necesita preguntar a un servidor DNS: "Oye, ¿cuál es la IP de ese tal google.com?". El servidor responde algo como "142.250.79.14", y ahí sí la conexión sucede.
+
+Esto ocurre **cientos de veces al día** — no solo cuando navegas, sino cuando las apps verifican actualizaciones, cuando tu celular "llama a casa", cuando la TV smart carga anuncios...
+
+Y es exactamente aquí donde entra la magia.
+
+---
+
+## Pi-hole: Adiós, anuncios
+
+El **Pi-hole** es un servidor DNS que se ejecuta en tu red local. Toda solicitud DNS pasa por él antes de ir a internet. Y la clave es simple: tiene una lista gigante de dominios conocidos por servir anuncios y rastreadores.
+
+Cuando alguien en la red intenta acceder a `ads.facebook.com` o `tracking.google-analytics.com`, el Pi-hole simplemente... no responde. El anuncio no carga. El rastreador no funciona.
+
+Esto significa: YouTube con menos anuncios, apps sin banners invasivos, y smartphones que dejan de "llamar a casa" cada 5 minutos.
+
+Y como backup, uso el DNS público de Cloudflare (1.1.1.1) — si el Pi-hole cae, internet sigue funcionando.
+
+---
+
+## Proxmox: Un computador, varios sistemas
+
+Ahora la pregunta: ¿dónde se ejecuta todo esto?
+
+En lugar de tener 5 computadoras diferentes consumiendo energía y espacio, tengo **un único servidor** con Proxmox VE. Es un sistema operativo de virtualización que permite crear **containers LXC** y **máquinas virtuales** que se ejecutan de forma completamente aislada.
+
+Piensa así: es como tener varias computadoras dentro de una sola, cada una haciendo su trabajo sin interferir con las otras.
+
+**Lo que se ejecuta en mi Proxmox:**
+
+| Servicio | Función |
+|---------|--------|
+| 📁 **Nextcloud** | Mi propio "Google Drive" — archivos sincronizados entre todos los dispositivos |
+| 🏠 **Home Assistant** | Automatización del hogar — controlo luces, aire acondicionado, y monitoreo sensores |
+| 🎬 **Jellyfin** | Netflix personal — mi biblioteca de medios accesible desde cualquier lugar |
+| 🔒 **Pi-hole DNS** | Bloqueo de anuncios en red |
+| 🔄 **Node-RED** | Automatizaciones visuales — integro servicios de forma fácil |
+
+Si un servicio da problema, reinicio solo ese. Si quiero probar algo nuevo, creo un container, lo pruebo, y lo elimino si no me gusta. **Cero riesgo para el resto del sistema.**
+
+---
+
+## VPN: Acceso desde cualquier lugar
+
+Una de las funcionalidades que más uso es el acceso remoto vía **OpenVPN**. Con ella, incluso estando fuera de casa (en el trabajo, viajando, en cualquier lugar), consigo acceder a mi red local como si estuviera allí.
+
+Esto significa: acceder a mis archivos en Nextcloud, controlar la casa con Home Assistant, o depurar algo en el servidor — todo de forma segura, cifrada.
+
+---
+
+## ¿Qué aprendí con todo esto?
+
+1. **Las redes no son solo teoría** — entender cómo fluye tu tráfico cambia completamente tu perspectiva sobre el desarrollo
+2. **Self-hosting es empoderador** — controlas tus datos, no dependes de servicios de terceros
+3. **No se necesita hardware caro** — un PC usado o un mini PC funciona perfectamente
+4. **La documentación es vida** — ese diagrama de red ahorra horas de depuración
+5. **Seguridad en capas** — DNS bloqueando rastreadores, VPN cifrando acceso, red segmentada
+
+Si tú también dormías en las clases de Redes... quizás sea hora de despertar. 😉
+
+---
+
+*¿Y tú, tienes algún proyecto de homelab o idea para organizar mejor tu red? ¿O la mía? ¡Llámame y charlamos!*
