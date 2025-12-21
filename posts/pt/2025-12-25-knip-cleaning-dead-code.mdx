@@ -1,0 +1,346 @@
+---
+title: 'Knip: a ferramenta que encontra código morto no seu projeto'
+date: '2025-12-25'
+description: >-
+  Descobri o Knip e ele mudou como faço manutenção de código. Veja como essa ferramenta encontra arquivos não usados, dependências desnecessárias e exports esquecidos.
+tags:
+  - javascript
+  - typescript
+  - ferramentas
+  - qualidade-de-codigo
+  - manutencao
+published: true
+coverImage: 'https://images.unsplash.com/photo-1629654297299-c8506221ca97?w=1200&q=80'
+---
+
+Enquanto você aproveita o Natal, que tal pensar em um presente para o seu código?  
+**Limpeza.**
+
+Todo projeto acumula código morto.
+
+É inevitável. Você refatora uma feature, move código de lugar, troca uma lib por outra — e esquece de limpar o que ficou para trás.
+
+Arquivos não usados.  
+Dependências instaladas que ninguém importa.  
+Funções exportadas que nenhum arquivo consome.
+
+Isso não é descuido. É **consequência natural de manter código vivo**.
+
+O problema é que esse acúmulo tem custo:
+- aumenta o bundle final
+- confunde novos devs no projeto
+- torna o `node_modules` mais pesado
+- dificulta refatorações futuras
+
+Eu sempre soube que isso existia nos meus projetos.  
+Mas nunca tive uma forma **confiável e automatizada** de encontrar.
+
+Até conhecer o **Knip**.
+
+---
+
+## O que é o Knip
+
+O [Knip](https://knip.dev/) é uma ferramenta que analisa projetos JavaScript e TypeScript para encontrar:
+
+- **arquivos não utilizados** (não importados em lugar nenhum)
+- **dependências não usadas** no `package.json`
+- **exports que ninguém importa**
+- **dependências faltando** (você usa mas não declarou)
+- **tipos e interfaces exportados mas nunca importados**
+
+Ele funciona como um **garbage collector para o seu código**.
+
+A ideia é simples: o Knip mapeia todo o grafo de dependências do projeto, identifica os pontos de entrada (entry points) e marca tudo que é alcançável a partir deles.
+
+O que não for alcançável? **Provavelmente está morto.**
+
+---
+
+## Por que isso importa
+
+Código morto não quebra a aplicação.  
+Mas ele **degrada a experiência de desenvolvimento**.
+
+Quando você tem:
+- 50 arquivos que ninguém usa
+- 20 dependências instaladas à toa
+- Dezenas de funções exportadas que nunca são importadas
+
+O projeto fica mais difícil de:
+- entender
+- navegar
+- refatorar
+- otimizar
+
+E pior: você **não sabe o que pode deletar com segurança**.
+
+O Knip resolve exatamente isso.
+
+---
+
+## Como funciona na prática
+
+A instalação é simples:
+
+```bash
+npm install -D knip
+# ou
+pnpm add -D knip
+```
+
+Depois, basta rodar:
+
+```bash
+npx knip
+```
+
+Sem configuração nenhuma, ele já:
+- detecta automaticamente o framework que você usa (Next.js, Vite, Astro, etc.)
+- identifica os entry points do projeto
+- varre todos os arquivos
+- reporta o que encontrou
+
+---
+
+## Minha primeira experiência com Knip
+
+Rodei o Knip em um projeto pessoal relativamente pequeno.
+
+A saída foi reveladora:
+
+### Arquivos não usados
+
+```
+Unused files (12)
+  src/utils/old-helper.ts
+  src/components/legacy/OldButton.tsx
+  ...
+```
+
+Arquivos que eu **tinha certeza** que estavam sendo usados.  
+Mas não estavam.
+
+Eram restos de refatorações antigas que eu simplesmente esqueci de deletar.
+
+---
+
+### Dependências não usadas
+
+```
+Unused dependencies (8)
+  lodash
+  moment
+  ...
+```
+
+Libs que eu instalei, usei em algum momento, depois substituí — mas **nunca desinstalei**.
+
+Resultado: `node_modules` mais pesado, `package.json` poluído, e potencial de vulnerabilidades em código que nem roda.
+
+---
+
+### Exports não utilizados
+
+```
+Unused exports (15)
+  formatDate (src/utils/date.ts)
+  parseQuery (src/utils/url.ts)
+  ...
+```
+
+Funções que eu exportei "por via das dúvidas", mas que nunca foram importadas em lugar nenhum.
+
+Isso é especialmente comum em arquivos de utilitários.
+
+---
+
+## Configurando o Knip
+
+Na maioria dos casos, o Knip funciona **sem configuração**.
+
+Mas se você precisar ajustar, ele aceita um arquivo `knip.json` ou `knip.ts`:
+
+```json
+{
+  "entry": ["src/index.ts"],
+  "project": ["src/**/*.ts"],
+  "ignore": ["src/scripts/**", "**/*.test.ts"]
+}
+```
+
+Você pode:
+- definir entry points customizados
+- ignorar pastas específicas (como scripts internos)
+- configurar plugins para frameworks específicos
+
+A [documentação oficial](https://knip.dev/reference/configuration) é bem completa.
+
+---
+
+## Integrando no fluxo de trabalho
+
+Depois de limpar o projeto pela primeira vez, o ideal é **manter ele limpo**.
+
+Você pode:
+
+### Rodar no CI
+
+Adicione o Knip no seu pipeline de CI para bloquear PRs que introduzam código morto:
+
+```yaml
+- name: Check for dead code
+  run: npx knip
+```
+
+---
+
+### Rodar antes de commits
+
+Use o Knip com `husky` ou `lint-staged` para validar antes de commitar:
+
+```json
+{
+  "lint-staged": {
+    "*.{ts,tsx}": ["knip"]
+  }
+}
+```
+
+---
+
+### Rodar periodicamente
+
+Se preferir algo menos rigoroso, rode manualmente de tempos em tempos:
+
+```bash
+npm run knip
+```
+
+Eu prefiro essa abordagem no início, até entender melhor o comportamento da ferramenta no projeto.
+
+---
+
+## Limitações e falsos positivos
+
+O Knip não é perfeito.
+
+Ele pode reportar falsos positivos em casos como:
+
+- **imports dinâmicos** que ele não consegue rastrear
+- **arquivos referenciados por string** (ex: rotas do Next.js em `pages/`)
+- **dependências usadas apenas em runtime** (ex: drivers de banco)
+
+Nesses casos, você pode:
+- adicionar o arquivo/dependência na lista de `ignore`
+- configurar entry points adicionais
+- usar comentários especiais no código para sinalizar uso intencional
+
+Mas na minha experiência, **a maioria dos reports é válida**.
+
+---
+
+## Comparação com outras ferramentas
+
+Antes do Knip, eu usava ferramentas como:
+
+### ts-prune
+
+Focado apenas em **exports não usados**.  
+Funciona bem, mas está em modo de manutenção e não detecta dependências ou arquivos.
+
+### depcheck
+
+Focado apenas em **dependências não usadas**.  
+Útil, mas limitado.
+
+### ESLint com no-unused-vars
+
+Detecta **variáveis não usadas dentro de arquivos**, mas não analisa o projeto como um todo.
+
+---
+
+O Knip **unifica tudo isso** em uma única ferramenta.
+
+Ele entende:
+- arquivos
+- dependências
+- exports
+- tipos
+- e até membros de classes e enums
+
+É a ferramenta mais completa que eu já usei para esse propósito.
+
+---
+
+## Resultados reais
+
+Depois de rodar o Knip e limpar o projeto:
+
+- **Removi 18 arquivos** que não estavam sendo usados
+- **Desinstalei 12 dependências** desnecessárias
+- **Deletei 25+ exports** que ninguém importava
+- **Reduzi o bundle em ~8%** (medido com `next-bundle-analyzer`)
+
+Não foi uma mudança revolucionária de performance.  
+Mas o projeto ficou **visivelmente mais limpo**.
+
+E o mais importante: agora eu **sei o que está sendo usado**.
+
+---
+
+## Quando usar o Knip
+
+Recomendo rodar o Knip se:
+
+- você herdou um projeto legado
+- o projeto cresceu rápido e acumulou código
+- você fez refatorações grandes recentemente
+- quer reduzir o tamanho do bundle
+- quer melhorar a manutenibilidade do código
+
+Não precisa ser um projeto enorme.  
+Mesmo projetos pequenos acumulam código morto.
+
+---
+
+## Como começar
+
+Se você nunca usou, comece simples:
+
+1. Instale: `npm install -D knip`
+2. Rode: `npx knip`
+3. Analise os resultados
+4. Delete o que faz sentido
+5. Configure o que for necessário
+
+Não tente limpar tudo de uma vez.  
+Vá aos poucos, validando cada mudança.
+
+---
+
+## Recursos úteis
+
+Se quiser se aprofundar:
+
+- **Documentação oficial:** https://knip.dev/
+- **Repositório no GitHub:** https://github.com/webpro/knip
+- **Plugins disponíveis:** https://knip.dev/reference/plugins
+
+A comunidade é ativa e o criador ([@webprolific](https://twitter.com/webprolific)) responde bem no GitHub.
+
+---
+
+## Conclusão
+
+O Knip não é uma ferramenta revolucionária.  
+Mas é **extremamente útil** para manter projetos limpos.
+
+Ele encontra código morto que você **nunca encontraria manualmente**.
+
+E o melhor: funciona bem **sem configuração complexa**.
+
+Se você mantém projetos JavaScript ou TypeScript, vale muito a pena testar.
+
+Eu já adotei no meu fluxo.  
+E não pretendo mais trabalhar sem ele.
