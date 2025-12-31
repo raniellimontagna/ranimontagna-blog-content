@@ -1,0 +1,323 @@
+---
+title: 'Biome: why I replaced ESLint + Prettier with a single tool'
+date: '2025-12-31'
+description: >-
+  Biome is a tool that replaces ESLint and Prettier with up to 35x faster performance. Learn how to migrate and simplify your JavaScript/TypeScript tooling.
+tags:
+  - javascript
+  - typescript
+  - tools
+  - linting
+  - formatting
+published: true
+coverImage: 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=1200&q=80'
+---
+
+Last day of the year. Time for that tooling retrospective.
+
+If you work with JavaScript or TypeScript, you probably use the classic duo: **ESLint** for code quality and **Prettier** for formatting. I used them for years.
+
+But in 2025, I migrated to **Biome**. And I don't plan on going back.
+
+---
+
+## The problem with ESLint + Prettier
+
+Don't get me wrong — ESLint and Prettier are excellent tools.  
+But using them together has costs:
+
+- **Fragmented configuration**: you need `.eslintrc`, `.prettierrc`, and plugins to make both tools work together
+- **Conflicts**: without `eslint-config-prettier`, the rules fight each other
+- **Performance**: both run on Node.js and can be slow on large projects
+- **Bloated node_modules**: each plugin adds dependencies
+
+How many times have you lost time debugging why the linter complained about something the formatter just changed?
+
+---
+
+## What is Biome
+
+[Biome](https://biomejs.dev/) (formerly Rome) is an **all-in-one** tool for web development, written in **Rust**.
+
+It does:
+- **Linting** (replaces ESLint)
+- **Formatting** (replaces Prettier)
+
+All in a single tool, with a single configuration file.
+
+The crucial difference: it was designed from the start to do both things **together**. There's no conflict between linter and formatter because they're the same engine.
+
+---
+
+## Why Biome is so fast
+
+The performance is absurd.
+
+According to Biome's own benchmarks:
+- **Formatting**: up to **35x faster** than Prettier
+- **Linting**: up to **15x faster** than ESLint
+
+This happens because:
+1. It's written in **Rust**, not JavaScript
+2. The parser is optimized for performance
+3. It processes files in parallel natively
+
+In practice, this means:
+- Instant feedback when saving in VS Code
+- Pre-commit hooks that fly
+- CI/CD that saves precious minutes
+
+---
+
+## Radical simplification
+
+Look at the difference in setup:
+
+### Before (ESLint + Prettier)
+
+```bash
+npm install eslint prettier
+npm install eslint-plugin-react
+npm install @typescript-eslint/parser
+npm install @typescript-eslint/eslint-plugin
+npm install eslint-config-prettier
+```
+
+Configuration files:
+- `.eslintrc.json`
+- `.prettierrc`
+- `.eslintignore`
+- `.prettierignore`
+
+### Now (Biome)
+
+```bash
+npm install --save-dev --save-exact @biomejs/biome
+```
+
+Configuration file:
+- `biome.json`
+
+**One dependency. One config file.**
+
+---
+
+## How to migrate
+
+Biome has an official migration guide, but the process is simple:
+
+### 1. Install Biome
+
+```bash
+npm install --save-dev --save-exact @biomejs/biome
+# or
+pnpm add -D --save-exact @biomejs/biome
+```
+
+### 2. Initialize the configuration
+
+```bash
+npx @biomejs/biome init
+```
+
+This generates a `biome.json` with sensible defaults.
+
+### 3. Run the formatter
+
+```bash
+npx @biomejs/biome format --write .
+```
+
+### 4. Run the linter
+
+```bash
+npx @biomejs/biome lint --write .
+```
+
+### 5. Or run everything together
+
+```bash
+npx @biomejs/biome check --write .
+```
+
+The `check` command runs linting and formatting at once.
+
+---
+
+## biome.json configuration
+
+The configuration file is intuitive:
+
+```json
+{
+  "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true
+    }
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "single",
+      "semicolons": "asNeeded"
+    }
+  }
+}
+```
+
+Everything in one place. No need to sync multiple files.
+
+---
+
+## Prettier compatibility
+
+A common concern: "will my code look different?"
+
+The Biome team worked to achieve **~97% compatibility** with Prettier's formatting.
+
+In practice, migration generates minimal diff. In some projects I migrated, the difference was almost imperceptible.
+
+---
+
+## VS Code integration
+
+Install the **Biome** extension in VS Code.
+
+It reads `biome.json` automatically and becomes your default formatter/linter for the project.
+
+Add to `.vscode/settings.json`:
+
+```json
+{
+  "editor.defaultFormatter": "biomejs.biome",
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "quickfix.biome": "explicit",
+    "source.organizeImports.biome": "explicit"
+  }
+}
+```
+
+---
+
+## package.json scripts
+
+Update your scripts:
+
+```json
+{
+  "scripts": {
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "format": "biome format --write ."
+  }
+}
+```
+
+---
+
+## Next.js and the future of Biome
+
+Relevant news: starting with **Next.js 15.5** (August 2025), the framework officially adopted Biome as the recommended alternative.
+
+The `next lint` command was deprecated. Now you explicitly choose between Biome or ESLint.
+
+When Vercel and Next.js adopt a tool, it's a strong signal that it's here to stay.
+
+---
+
+## Better diagnostics
+
+Biome doesn't just point out errors — it **explains** the problem.
+
+Diagnostics are clear, with autofix suggestions when possible. This makes debugging (and learning) more efficient.
+
+---
+
+## It's not all roses
+
+Before migrating, it's worth knowing where Biome still doesn't shine.
+
+### More limited plugin ecosystem
+
+ESLint has over a decade of existence. That means thousands of plugins: `eslint-plugin-vue`, `eslint-plugin-svelte`, company-specific rules, shared configs, etc.
+
+Biome is still building this ecosystem. If you depend on very specific plugins — especially for frameworks outside of React — you might miss them.
+
+The good news: React/JSX and TypeScript support are already first-class. And the ecosystem is growing fast.
+
+### Strong opinions about formatting
+
+Like Prettier, Biome has opinions. It offers more configuration options than Prettier, but still: if your team has very specific or exotic formatting rules, there may be friction.
+
+In practice, most teams adapt well. But it's worth aligning expectations before migrating an existing project.
+
+### Less mature in edge cases
+
+Being newer, Biome may have unexpected behaviors in less common scenarios. ESLint has gone through years of battle-testing in millions of projects.
+
+That said, for the most common use cases (React, Next.js, TypeScript), Biome works very well.
+
+---
+
+## My experience
+
+I migrated some personal and professional projects to Biome.
+
+**What I noticed:**
+- Much simpler setup
+- No longer need to think about conflicts between tools
+- CI became noticeably faster
+- Fewer dependencies in `node_modules`
+
+The only adjustment I needed was customizing some linting rules that were specific to our code standards.
+
+---
+
+## When to use Biome
+
+I strongly recommend if:
+- You're **starting a new project** — there's no reason not to use Biome
+- You're tired of **configuring ESLint + Prettier**
+- You want **performance** on large projects
+- You value **simplicity** in tooling
+
+If you have an existing project with very customized ESLint configuration and many specific plugins, evaluate whether migration is worth it. It might be, it might not — it depends on the case.
+
+---
+
+## Useful resources
+
+If you want to dive deeper:
+
+- **Official site:** https://biomejs.dev/
+- **Migration guide:** https://biomejs.dev/guides/migrate-eslint-prettier/
+- **GitHub repository:** https://github.com/biomejs/biome
+- **VS Code extension:** search for "Biome" in the marketplace
+
+---
+
+## Conclusion
+
+Biome isn't just another tool.  
+It's a **real simplification** of JavaScript/TypeScript tooling.
+
+Absurd performance, minimal configuration, and no conflicts between linter and formatter.
+
+If you haven't tested it yet, this might be a good New Year's resolution: **simplify your development setup**.
+
+Happy 2026! 🎉
+
+And may your code next year be clean, fast, and well-formatted — preferably with a single tool.
+
