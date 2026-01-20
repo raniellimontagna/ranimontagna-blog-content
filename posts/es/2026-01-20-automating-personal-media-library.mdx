@@ -15,7 +15,7 @@ published: true
 coverImage: 'https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?w=1200&q=80'
 ---
 
-En mi [post anterior sobre mi servidor casero](/es/blog/2025-12-22-my-networking-professor-was-right), mostré cómo organicé mi red doméstica con Proxmox, Pi-hole y otros servicios. Una de las piezas centrales era **[Jellyfin](https://jellyfin.org/)** — un servidor de medios open-source para organizar y reproducir mi colección personal.
+En mi [post anterior sobre mi servidor casero](/es/blog/my-networking-professor-was-right), mostré cómo organicé mi red doméstica con Proxmox, Pi-hole y otros servicios. Una de las piezas centrales era **[Jellyfin](https://jellyfin.org/)** — un servidor de medios open-source para organizar y reproducir mi colección personal.
 
 Pero había un problema: **gestionar manualmente** una biblioteca de medios es demasiado trabajo. Descargar archivos, convertir formatos, renombrar, organizar en carpetas, buscar subtítulos... todo manual.
 
@@ -214,7 +214,7 @@ Veamos un ejemplo real de cómo todo funciona junto:
 
 ## Infraestructura: Proxmox + Docker Compose
 
-Como mencioné en el [post anterior](/es/blog/2025-12-22-my-networking-professor-was-right), todo funciona en mi servidor casero con **Proxmox VE**. Creé un contenedor LXC dedicado para este stack de medios, lo que garantiza aislamiento y facilita la gestión.
+Como mencioné en el [post anterior](/es/blog/my-networking-professor-was-right), todo funciona en mi servidor casero con **Proxmox VE**. Creé un contenedor LXC dedicado para este stack de medios, lo que garantiza aislamiento y facilita la gestión.
 
 Dentro de este contenedor, todos los servicios funcionan vía **Docker Compose**, lo que garantiza:
 
@@ -246,7 +246,7 @@ Dentro de este contenedor, todos los servicios funcionan vía **Docker Compose**
 
 ## Configuraciones de Red
 
-Cada servicio tiene una IP fija en mi red (¿recuerdas el [post sobre organización de red](/es/blog/2025-12-22-my-networking-professor-was-right)?):
+Cada servicio tiene una IP fija en mi red (¿recuerdas el [post sobre organización de red](/es/blog/my-networking-professor-was-right)?):
 
 | Servicio | IP | Puerto |
 |---------|-----|-------|

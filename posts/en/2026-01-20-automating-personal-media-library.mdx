@@ -15,7 +15,7 @@ published: true
 coverImage: 'https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?w=1200&q=80'
 ---
 
-In my [previous post about my home server](/en/blog/2025-12-22-my-networking-professor-was-right), I showed how I organized my home network with Proxmox, Pi-hole and other services. One of the centerpieces was **[Jellyfin](https://jellyfin.org/)** — an open-source media server to organize and play my personal collection.
+In my [previous post about my home server](/en/blog/my-networking-professor-was-right), I showed how I organized my home network with Proxmox, Pi-hole and other services. One of the centerpieces was **[Jellyfin](https://jellyfin.org/)** — an open-source media server to organize and play my personal collection.
 
 But there was a problem: **manually managing** a media library is way too much work. Downloading files, converting formats, renaming, organizing into folders, finding subtitles... all manual.
 
@@ -214,7 +214,7 @@ Let's see a real example of how everything works together:
 
 ## Infrastructure: Proxmox + Docker Compose
 
-As I mentioned in my [previous post](/en/blog/2025-12-22-my-networking-professor-was-right), everything runs on my home server with **Proxmox VE**. I created a dedicated LXC container for this media stack, which ensures isolation and makes management easier.
+As I mentioned in my [previous post](/en/blog/my-networking-professor-was-right), everything runs on my home server with **Proxmox VE**. I created a dedicated LXC container for this media stack, which ensures isolation and makes management easier.
 
 Inside this container, all services run via **Docker Compose**, which ensures:
 
@@ -246,7 +246,7 @@ Inside this container, all services run via **Docker Compose**, which ensures:
 
 ## Network Configuration
 
-Each service has a fixed IP on my network (remember the [post about network organization](/en/blog/2025-12-22-my-networking-professor-was-right)?):
+Each service has a fixed IP on my network (remember the [post about network organization](/en/blog/my-networking-professor-was-right)?):
 
 | Service | IP | Port |
 |---------|-----|-------|

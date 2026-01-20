@@ -15,7 +15,7 @@ published: true
 coverImage: 'https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?w=1200&q=80'
 ---
 
-No [post anterior sobre meu servidor caseiro](/pt/blog/2025-12-22-my-networking-professor-was-right), mostrei como organizei minha rede doméstica com Proxmox, Pi-hole e outros serviços. Uma das peças centrais era o **[Jellyfin](https://jellyfin.org/)** — um servidor de mídia open-source para organizar e reproduzir minha coleção pessoal.
+No [post anterior sobre meu servidor caseiro](/pt/blog/my-networking-professor-was-right), mostrei como organizei minha rede doméstica com Proxmox, Pi-hole e outros serviços. Uma das peças centrais era o **[Jellyfin](https://jellyfin.org/)** — um servidor de mídia open-source para organizar e reproduzir minha coleção pessoal.
 
 Mas havia um problema: **gerenciar manualmente** uma biblioteca de mídia é trabalhoso demais. Baixar arquivos, converter formatos, renomear, organizar em pastas, buscar legendas... tudo manual.
 
@@ -214,7 +214,7 @@ Vamos ver um exemplo real de como tudo funciona junto:
 
 ## Infraestrutura: Proxmox + Docker Compose
 
-Como mencionei no [post anterior](/pt/blog/2025-12-22-my-networking-professor-was-right), tudo roda no meu servidor caseiro com **Proxmox VE**. Criei um container LXC dedicado para esse stack de mídia, o que garante isolamento e facilita gerenciamento.
+Como mencionei no [post anterior](/pt/blog/my-networking-professor-was-right), tudo roda no meu servidor caseiro com **Proxmox VE**. Criei um container LXC dedicado para esse stack de mídia, o que garante isolamento e facilita gerenciamento.
 
 Dentro desse container, todos os serviços rodam via **Docker Compose**, o que garante:
 
@@ -246,7 +246,7 @@ Dentro desse container, todos os serviços rodam via **Docker Compose**, o que g
 
 ## Configurações de Rede
 
-Cada serviço tem um IP fixo na minha rede (lembra do [post sobre organização de rede](/pt/blog/2025-12-22-my-networking-professor-was-right)?):
+Cada serviço tem um IP fixo na minha rede (lembra do [post sobre organização de rede](/pt/blog/my-networking-professor-was-right)?):
 
 | Serviço | IP | Porta |
 |---------|-----|-------|
