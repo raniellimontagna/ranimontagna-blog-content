@@ -1,0 +1,115 @@
+---
+title: 'Adeus forwardRef: Simplificando Refs no React 19'
+date: '2026-03-04'
+description: >-
+  O React 19 simplificou a forma como lidamos com Refs. 
+  Descubra como o ref agora é uma prop comum e por que o forwardRef 
+  está com os dias contados.
+tags:
+  - react
+  - react19
+  - hooks
+  - clean-code
+  - beginner-friendly
+published: true
+coverImage: >-
+  https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=1200&q=80
+---
+
+**TL;DR:** No React 19, o `ref` passou a ser uma prop comum em componentes funcionais. Você não precisa mais usar o `forwardRef` para passar uma referência de um componente pai para um filho; basta receber a prop `ref` como qualquer outra.
+
+---
+
+Se você já precisou acessar um elemento DOM de um componente filho a partir de um componente pai no React, provavelmente teve que lidar com o famoso (e às vezes confuso) `forwardRef`. 
+
+Embora funcional, o `forwardRef` adicionava uma camada extra de boilerplate e uma sintaxe que não parecia "natural" em comparação com outras props. Com o lançamento do **React 19**, essa dor de cabeça finalmente chegou ao fim.
+
+---
+
+## O Problema do `forwardRef`
+
+Tradicionalmente, a prop `ref` era tratada de forma especial pelo React. Ela não era passada automaticamente para o componente; em vez disso, você precisava "envolver" seu componente funcional com `forwardRef`:
+
+```tsx
+// ❌ O jeito antigo (React < 19)
+import { forwardRef } from 'react';
+
+const MyInput = forwardRef((props, ref) => {
+  return <input {...props} ref={ref} />;
+});
+
+// Uso
+const inputRef = useRef(null);
+<MyInput ref={inputRef} />;
+```
+
+Isso criava uma indentação extra e dificultava a leitura, especialmente quando combinado com TypeScript ou outros HOCs (Higher-Order Components).
+
+---
+
+## Adeus forwardRef: O Jeito React 19
+
+No React 19, o `ref` agora é apenas mais uma prop. Você pode recebê-lo diretamente na lista de argumentos do seu componente funcional:
+
+```tsx
+// ✅ O novo jeito (React 19)
+function MyInput({ label, ref, ...props }) {
+  return (
+    <label>
+      {label}
+      <input {...props} ref={ref} />
+    </label>
+  );
+}
+
+// Uso (exatamente igual)
+const inputRef = useRef(null);
+<MyInput label="Nome:" ref={inputRef} />;
+```
+
+Simples assim. Sem funções extras, sem sintaxe especial. O `ref` agora se comporta como qualquer outra propriedade que você passa para o seu componente.
+
+---
+
+## E o TypeScript?
+
+Para quem usa TypeScript, a mudança também traz simplicidade. Você não precisa mais do tipo genérico complexo do `forwardRef`. Basta definir o tipo da prop `ref` na sua interface:
+
+```tsx
+interface MyInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  label: string;
+  ref?: React.Ref<HTMLInputElement>;
+}
+
+function MyInput({ label, ref, ...props }: MyInputProps) {
+  return (
+    <label>
+      {label}
+      <input {...props} ref={ref} />
+    </label>
+  );
+}
+```
+
+---
+
+## O que acontece com o código antigo?
+
+Não se preocupe! O `forwardRef` não foi removido do React 19. Ele continua funcionando para garantir compatibilidade com versões anteriores. No entanto, ele agora é considerado uma API legada para componentes funcionais.
+
+A recomendação oficial é migrar para o novo padrão de "ref como prop" conforme você atualiza seus componentes.
+
+---
+
+## Conclusão
+
+A mudança do `ref` para uma prop comum é um excelente exemplo de como o React está evoluindo para se tornar mais simples e intuitivo. Menos APIs especiais significam menos conceitos para aprender e menos boilerplate para escrever.
+
+O código fica mas limpo, a intenção fica mais clara e o desenvolvimento flui melhor.
+
+### Referência:
+- [Documentação Oficial do React 19 (Beta/RC)](https://react.dev/blog/2024/04/25/react-19)
+
+---
+
+O que você achou dessa mudança? Já começou a migrar seus componentes para o React 19? Deixe sua dúvida nos comentários! 👇🚀

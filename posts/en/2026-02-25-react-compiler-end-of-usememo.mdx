@@ -1,0 +1,139 @@
+---
+title: 'React Compiler: The Definitive Guide to the End of useMemo and useCallback'
+date: '2026-02-25'
+description: >-
+  The React Compiler is here to revolutionize performance. 
+  Understand how automatic memoization eliminates boilerplate, 
+  how to set it up, and how it changes your workflow.
+tags:
+  - react
+  - performance
+  - react-compiler
+  - hooks
+  - nextjs
+published: true
+coverImage: >-
+  https://br-se1.magaluobjects.com/ranimontagna-blog-images/blog-covers/default-react-compiler.webp
+---
+
+**TL;DR:** The React Compiler is a build tool that automatically transforms your regular React code into highly optimized code. It eliminates the need to use `useMemo` and `useCallback` in most cases, ensuring maximum performance with less boilerplate.
+
+---
+
+If you develop with React, you've probably felt the pain (and perhaps frustration) of manually optimizing your components. The constant use of `useMemo`, `useCallback`, and `React.memo` has become almost a ritual to avoid unnecessary re-renders. While powerful, these tools add complexity and are easy to apply incorrectly.
+
+But what if there was a way to have the best of both worlds? The simplicity of React's declarative model with automatic performance optimizations? That's exactly the promise of the **React Compiler** (formerly known as *React Forget*).
+
+---
+
+## What is the React Compiler and why use it?
+
+The React Compiler is a tool that operates exclusively at build time, analyzing and optimizing your code before it even reaches the browser. Its central goal is to **automate memoization**.
+
+### Why is this important?
+- **Less boilerplate:** Reduces the need for manual code, making your components cleaner.
+- **Automatic performance:** The Compiler ensures only the necessary parts of the UI are updated, what we call "fine-grained reactivity."
+- **Simpler code:** Your code becomes more readable without the overhead of manual memoization hooks.
+
+---
+
+## How does it work under the hood?
+
+The Compiler performs a deep static analysis of your code during the build. It doesn't just "put useMemo on everything." The process involves:
+
+1. **AST Analysis:** It breaks down your code into an Abstract Syntax Tree.
+2. **Dependency Graph:** It builds a map of all values and how they relate.
+3. **Reactivity Inference:** Identifies which values actually change between renders.
+
+A crucial point is **safety**: if the Compiler detects that a component violates the "Rules of React" (like direct property mutation), it simply ignores it, ensuring no bugs are introduced.
+
+---
+
+## The End of Boilerplate: Before and After
+
+### Before (Manual Optimization)
+```tsx
+import { useMemo, useCallback } from 'react';
+
+function MyComponent({ data, onItemClick }) {
+  const processedData = useMemo(() => {
+    return data.filter(item => item.active);
+  }, [data]);
+
+  const handleClick = useCallback((id) => {
+    onItemClick(id);
+  }, [onItemClick]);
+
+  return <List items={processedData} onClick={handleClick} />;
+}
+```
+
+### After (With React Compiler)
+```tsx
+function MyComponent({ data, onItemClick }) {
+  const processedData = data.filter(item => item.active);
+
+  const handleClick = (id) => {
+    onItemClick(id);
+  };
+
+  return <List items={processedData} onClick={handleClick} />;
+}
+```
+The compiler automatically injects the memoization logic, leaving your file much cleaner.
+
+---
+
+## Best Practices and Considerations
+
+To make the most of the Compiler (especially now that it's been stable since late 2025), follow these tips:
+
+1. **Follow the Rules of React:** Strict adherence to the rules is essential. Use the `eslint-plugin-react-compiler` ESLint plugin to ensure your code is "compilable."
+2. **Beware of useEffect:** Automatic memoization can change the behavior of effects that rely on exact referential stability. Keep manual memoizations in critical dependencies for safety if necessary.
+3. **Gradual Adoption:** In existing projects, enable the Compiler by directory using your bundler's configuration (Next.js, Vite, Webpack).
+4. **Use React DevTools:** Look for the **"memo ✨"** badge to confirm which components have been optimized.
+
+---
+
+## How to Enable in Next.js (15+)
+
+Just update your `next.config.js`:
+
+```javascript
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  experimental: {
+    reactCompiler: true,
+  },
+};
+
+module.exports = nextConfig;
+```
+
+---
+
+## FAQ: What you need to know
+
+**Are useMemo and useCallback dead?**
+Not entirely. They can still be useful for referential stability in external custom hook dependencies that aren't compiled, but their use in common components will drop drastically.
+
+**Is it safe to use in production?**
+Yes! Meta has been using the Compiler in production on Facebook and Instagram for some time. The stable version 1.0 released in late 2025 consolidated its safety.
+
+**Does it slow down the build?**
+There will be a slight increase in build time due to static analysis, but the gains in runtime performance (up to 15% rendering improvement) and code reduction (up to 40%) outweigh the cost.
+
+---
+
+## Conclusion
+
+The React Compiler marks an important evolution for the ecosystem. It allows us to focus on **business logic** and **user experience**, while the machine takes care of micro-optimization.
+
+We are finally getting closer to React's original dream: **performance by default**.
+
+### Reference:
+- [Official React Compiler Documentation](https://react.dev/learn/react-compiler)
+
+---
+
+What do you think of this change? Have you tested the compiler in your project? Let us know in the comments! 👇🚀
