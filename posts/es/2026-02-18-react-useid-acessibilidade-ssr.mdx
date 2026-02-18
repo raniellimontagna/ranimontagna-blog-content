@@ -1,0 +1,141 @@
+---
+title: 'useId: Por qué deberías dejar de usar Math.random() para IDs en React'
+date: '2026-02-18'
+description: >-
+  Descubre cómo el hook useId de React 18 resuelve problemas críticos de 
+  accesibilidad y consistencia en SSR. Entiende por qué Math.random() es una 
+  trampa y cómo usar useId correctamente.
+tags:
+  - react
+  - accesibilidad
+  - ssr
+  - hooks
+  - webperf
+published: true
+coverImage: >-
+  https://br-se1.magaluobjects.com/ranimontagna-blog-images/blog-covers/default-react-hooks.webp
+---
+
+**TL;DR:** El hook `useId` genera IDs únicos y estables que no cambian entre renderizados. Es esencial para la accesibilidad (vincular labels a inputs) y evita errores de hidratación em SSR (Server-Side Rendering), algo que `Math.random()` no puede garantir.
+
+---
+
+Si alguna vez has necesitado vincular un `<label>` a un `<input>` en un componente de React reutilizable, probablemente te has enfrentado al dilema: "¿Cómo genero un ID único para este campo?".
+
+Durante mucho tiempo, la solución rápida fue usar algo como `Math.random()` o un contador global. Pero si te importa la **accesibilidad (a11y)** y el **Server-Side Rendering (SSR)**, este enfoque es, en realidad, una trampa.
+
+Con React 18, llegó el hook `useId`, que es la solución oficial y definitiva para este problema.
+
+---
+
+## El Problema de los IDs "Mágicos"
+
+En HTML puro, vincular una etiqueta a un input es sencillo: el atributo `for` de la etiqueta debe coincidir con el `id` del input.
+
+```html
+<label for="email">Correo electrónico:</label>
+<input id="email" type="email" />
+```
+
+Pero en React, los componentes están diseñados para ser **reutilizables**. Si renderizas este componente dos veces en la misma página, terminarás con dos elementos con el `id="email"`. Esto es HTML inválido y rompe las tecnologías de asistencia, como los lectores de pantalla.
+
+### El Pecado de `Math.random()`
+
+Muchos intentan "resolverlo" generando un ID aleatorio durante el renderizado:
+
+```tsx
+// ❌ NO HAGAS ESTO
+const id = Math.random().toString(36).substr(2, 9);
+```
+
+Esto causa dos problemas graves:
+1. **Inestabilidad**: El ID cambia en cada renderizado, lo que puede confundir al navegador y a las herramientas de accesibilidad.
+2. **Hydration Mismatch**: En SSR, el `Math.random()` generado en el servidor será diferente al generado en el cliente, provocando errores de hidratación.
+
+---
+
+## Conoce `useId`
+
+`useId` genera un string único que es **estable** entre renderizados y, lo más importante, **consistente** entre el servidor y el cliente. No recibe argumentos y devuelve el string del ID.
+
+```tsx
+import { useId } from 'react';
+
+function LabeledInput({ label, type = "text" }) {
+  const id = useId();
+  
+  return (
+    <div>
+      <label htmlFor={id}>{label}</label>
+      <input id={id} type={type} />
+    </div>
+  );
+}
+```
+
+---
+
+## Componentes Dinámicos
+
+Uno de los mayores beneficios de `useId` aparece cuando tenemos componentes renderizados dinámicamente o múltiples veces. Como React gestiona la generación de estos IDs internamente, cada instancia tendrá su propia identidad única sin ningún esfuerzo extra.
+
+```tsx
+function App() {
+  return (
+    <form>
+      <LabeledInput label="Nombre" />
+      <LabeledInput label="Apellido" />
+      {/* Cada instancia anterior tendrá un ID único generado por React */}
+    </form>
+  );
+}
+```
+
+Esto evita conflictos de comportamiento en JavaScript (como selectores que toman el elemento equivocado) y garantiza que el lector de pantalla siempre se enfoque en el campo correcto al hacer clic en el label.
+
+---
+
+## Generando Múltiplos IDs a la vez
+
+No necesitas llamar a `useId` para cada elemento hijo. Usa el ID principal como un **prefijo**:
+
+```tsx
+function PasswordField() {
+  const id = useId();
+  
+  return (
+    <>
+      <label htmlFor={id + '-input'}>Contraseña</label>
+      <input id={id + '-input'} type="password" aria-describedby={id + '-hint'} />
+      <p id={id + '-hint'}>La contraseña debe tener al menos 8 caracteres.</p>
+    </>
+  );
+}
+```
+
+---
+
+## Mejores Prácticas
+
+- **Usa para Accesibilidad**: Prefiere siempre `useId` en lugar de IDs estáticos para vincular etiquetas, descripciones ARIA y títulos.
+- **Evita IDs Hardcoded**: Los IDs fijos en componentes aumentan el riesgo de colisiones y bugs difíciles de rastrear.
+- **Consistencia**: Usa el hook en toda la aplicación para mantener un patrón robusto de IDs dinámicos.
+
+### Cuándo NO usar:
+1. **Keys en Listas**: Nunca uses `useId` para la propiedad `key`. Usa IDs reales de tus datos.
+2. **Selectores CSS**: Los IDs de `useId` pueden contener `:`, lo que requiere escape en CSS. Prefiere usar clases para el estilo.
+
+---
+
+## Conclusión
+
+`useId` es una herramienta pequeña pero poderosa. Garantiza que tu aplicación sea accesible, libre de errores de hidratación y preparada para el futuro de React.
+
+Si todavía usas `Math.random()`, ¡es hora de actualizar tu código!
+
+### Referencia:
+- [Documentación oficial de useId](https://react.dev/reference/react/useId)
+
+---
+
+¿Te ha gustado este consejo? ¡Compártelo con quien todavía esté peleando con los IDs en React! 🚀
