@@ -1,0 +1,225 @@
+---
+title: >-
+  Fadenbrett: cómo la IA me ayudó a construir una app completa en menos de 24 horas
+date: '2026-03-09'
+description: >-
+  Construí un tablero de investigación digital self-hosted desde cero en menos de
+  24 horas usando Claude, Ralph y Claude Code. Cómo la IA está cambiando el proceso
+  de creación — y cómo lo instalé en Proxmox con un solo comando.
+tags:
+  - ia
+  - self-hosting
+  - proxmox
+  - open-source
+  - desarrollo
+  - claude
+  - homelab
+published: true
+coverImage: >-
+  https://images.unsplash.com/photo-1611532736597-de2d4265fba3?ixlib=rb-4.1.0&w=1200&q=80
+---
+
+Estoy reviendo *Dark* — la serie alemana de Netflix con viajes en el tiempo, paradojas y una red de personajes que atraviesa décadas y generaciones.
+
+Es brillante. Y completamente imposible de seguir sin un mapa.
+
+Personajes que existen en tres épocas distintas, hijos que son padres de sus propios abuelos, conexiones que solo tienen sentido en el episodio 8 de la tercera temporada... En determinado momento, paré y pensé: *necesito un tablero de investigación para esto*.
+
+¿Conoces ese tablero de corcho con fotos, papeles y hilos rojos que aparece en las películas policiales? Exactamente ese. Pero digital, self-hosted, mío.
+
+Lo que comenzó como un proyecto de prueba rápido para resolver mi problema con *Dark* terminó sorprendiéndome. En menos de 24 horas, estaba corriendo en mi Proxmox con colaboración en tiempo real, modo presentación, undo/redo ilimitado y un script de deploy con un solo comando.
+
+Y la IA fue lo que hizo eso posible.
+
+---
+
+## Qué es Fadenbrett
+
+**Fadenbrett** viene del alemán: *Faden* (hilo) + *Brett* (tablero). Una referencia directa al *roter Faden* — el hilo conductor — y los hilos rojos de los tableros de investigación.
+
+Es un tablero de investigación digital interactivo. Un canvas infinito donde conectas personajes, eventos, teorías y notas con conexiones semánticas. Completamente self-hosted.
+
+**Funcionalidades principales:**
+- Canvas infinito con tarjetas de personajes, post-its y conexiones visuales
+- Colaboración en tiempo real vía WebSockets (cursores remotos, sincronización de estado)
+- Múltiples tableros con cambio instantáneo
+- Subida de imágenes en las tarjetas
+- Modo presentación con slides por nodo
+- Undo/Redo ilimitado
+- Exportación PNG/JPEG del canvas
+- Tus datos se quedan en tu servidor — cero telemetría
+
+**Stack:**
+
+| Capa | Tecnología |
+|---|---|
+| Frontend | React 19 + Vite + TypeScript + Tailwind v4 + Zustand + React Flow |
+| Backend | Fastify + Drizzle ORM + SQLite |
+| Infra | Docker + Nginx + Compose |
+
+---
+
+## Menos de 24 horas. Es real.
+
+Primer commit: 7 de marzo. Versión 1.0.0 lanzada: 8 de marzo.
+
+No es exageración de marketing. Es el changelog.
+
+Lo que hizo eso posible no fue trabajar 24 horas seguidas. Fue trabajar de una manera completamente diferente — con **Claude**, **Ralph** y **Claude Code** como socios de desarrollo.
+
+---
+
+## Claude + Ralph + Claude Code: el stack que cambió el proceso
+
+Uso Claude hace tiempo como par técnico — para razonar sobre arquitectura, discutir trade-offs, revisar lógica. Ya escribí sobre eso en un [post anterior sobre IA y desarrollo](/es/blog/ia-nao-vai-substituir-devs-mas-vai-filtrar).
+
+Para Fadenbrett, fui un paso más allá. Usé **[Ralph](https://github.com/snarktank/ralph)** — un loop de agente autónomo open-source que orquesta Claude Code repetidamente hasta completar todos los ítems de un PRD.
+
+El flujo es simple: escribís un PRD con las user stories, lo convertís a `prd.json`, y ejecutás Ralph. Este spawnea una instancia de Claude Code, que implementa una historia, corre los quality checks, hace commit y la marca como completa. Después spawnea la siguiente. Y así — hasta que todo está verde.
+
+**Cada instancia comienza con contexto limpio**, lo que evita degradación de contexto en proyectos largos. El progreso queda persistido en `progress.txt` y en los commits de git.
+
+Mi rol fue:
+- Escribir el PRD con todas las features que quería
+- Tomar decisiones cuando surgían ambigüedades
+- Revisar lo que se generó
+- Ajustar la dirección cuando fue necesario
+
+El resto — implementación, patrones de código, tests, commits — lo manejó el agente.
+
+Esto no es "la IA lo hizo todo". Es una nueva forma de trabajar — donde operás a nivel de producto y sistema, y la ejecución ocurre a una velocidad diferente.
+
+---
+
+## Cómo funcionó el proceso en la práctica
+
+Cada feature fue implementada como una user story. El agente leía el PRD, elegía la próxima historia, la implementaba, corría `pnpm type-check && pnpm lint && pnpm test`, corregía si algo fallaba, y hacía commit.
+
+Algunas cosas interesantes construidas así:
+
+- **Canvas infinito** con pan y zoom vía React Flow
+- **Colaboración en tiempo real** vía WebSockets — el agente resolvió el broadcast entre tabs, cursores remotos, sincronización de estado
+- **Templates predefinidos** — tableros listos para usar
+- **Modo presentación** — navegación nodo por nodo con animaciones suaves
+- **Copy/Paste de nodos**, atajos de teclado, undo/redo ilimitado
+- **Script de deploy Proxmox** — crea un container LXC completo con un comando
+
+Cada uno fue una iteración. Cada iteración llevó minutos, no horas.
+
+---
+
+## Proxmox: instalación con un solo comando
+
+Una de las partes de la que más me orgullezco es el deploy en Proxmox.
+
+Si me seguís, sabés que [organizo toda mi infraestructura en casa con Proxmox VE](/es/blog/my-networking-professor-was-right). Containers LXC para cada servicio, red segmentada, backups automáticos.
+
+Para Fadenbrett, quería la misma simplicidad que ofrecen herramientas como **Proxmox Helper Scripts**: pegás un comando, vas a hacer un café, volvés con todo instalado.
+
+El script de instalación:
+
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/raniellimontagna/fadenbrett/main/scripts/proxmox/install.sh)
+```
+
+Lo que hace automáticamente:
+1. Detecta el próximo CT ID disponible en el cluster
+2. Descarga el template Debian 12
+3. Crea el container LXC (512MB RAM, 1 core, 8GB disco — configurable)
+4. Instala Docker y Docker Compose dentro del container
+5. Clona el repositorio y hace el build completo
+6. Levanta los servicios vía Docker Compose
+7. Configura inicio automático con Proxmox
+
+Al final, tenés Fadenbrett corriendo en tu IP de red local. Sin configuración manual.
+
+**Parámetros configurables:**
+
+```bash
+CT_ID=200 CT_RAM=1024 FADENBRETT_PORT=8080 bash <(curl -fsSL ...)
+```
+
+**Para actualizar:**
+
+```bash
+CT_ID=200 bash <(curl -fsSL https://raw.githubusercontent.com/raniellimontagna/fadenbrett/main/scripts/proxmox/update.sh)
+```
+
+El script de update detiene los containers, hace pull de los cambios, rebuildeá las imágenes y reinicia. Sin preocupaciones por downtime.
+
+---
+
+## Lo que aprendí sobre desarrollar con IA
+
+Esta experiencia cambió cómo pienso el rol de la IA en el desarrollo.
+
+**No se trata de delegar todo.** Se trata de cambiar en qué nivel operás.
+
+Antes, gastaba energía en:
+- Boilerplate y setup inicial
+- Implementar features repetitivas
+- Debug de errores de tipado
+- Integración de librerías
+
+Ahora, gasto energía en:
+- Definir *qué* necesita ser el producto
+- Tomar decisiones de arquitectura
+- Revisar si lo generado tiene sentido
+- Pensar en los casos de uso reales
+
+El tiempo entre idea y algo funcionando cayó drásticamente. Con Fadenbrett, eso fue literal: una idea que hubiera estado semanas en un backlog personal salió del papel en menos de un día.
+
+No porque la IA sea mágica. Sino porque redujo la fricción entre intención y ejecución.
+
+---
+
+## Por qué self-hosted importa
+
+Fadenbrett podría haber sido una herramienta SaaS. Probablemente hubiera sido más fácil de lanzar así.
+
+Pero no sería mío.
+
+Self-hosted significa:
+- Tus datos se quedan en tu servidor
+- Sin planes freemium, sin límite de tableros, sin exportación bloqueada
+- Funciona offline
+- Vos controlás las actualizaciones
+- Cero telemetría
+
+Para quien ya tiene infraestructura en casa (Proxmox, por ejemplo), agregar otro servicio es solo cuestión de correr un script.
+
+---
+
+## Próximos pasos
+
+El proyecto está en desarrollo activo. Ya en la versión 1.2.0, con más cosas planificadas:
+
+- Timeline visual por era/período
+- Búsqueda global en los tableros
+- Compartir tableros por link
+
+Si usás Proxmox o tenés interés en self-hosting, probalo. El feedback es bienvenido.
+
+**Repositorio:** [github.com/raniellimontagna/fadenbrett](https://github.com/raniellimontagna/fadenbrett)
+
+---
+
+## Conclusión
+
+Fadenbrett empezó como un proyecto de prueba. Quería entender mejor el flujo con Ralph + Claude Code, y necesitaba un caso de uso real para eso.
+
+*Dark* me dio el pretexto perfecto.
+
+Lo que no esperaba era el resultado. Lo que debería haber sido un experimento rápido se convirtió en un proyecto completo: canvas infinito, colaboración en tiempo real, modo presentación, exportación, múltiples tableros, scripts de Proxmox — todo eso en menos de 24 horas.
+
+Me sorprendió. Genuinamente.
+
+No por la cantidad de código generado, sino por la calidad de lo que se entregó. El proyecto tiene tests, sigue patrones consistentes, tiene scripts de deploy y update. No fue un prototipo descartable — quedó lo suficientemente bueno para usarlo de verdad.
+
+Sigo creyendo que el desarrollador importa — la IA no reemplaza el juicio, el contexto de producto o la visión técnica. Pero claramente cambió lo que es posible construir, y en cuánto tiempo.
+
+Y esto recién está empezando.
+
+---
+
+*¿Usás tableros visuales para pensar sistemas? ¿Tenés algún proyecto self-hosted interesante? Escribime.*
