@@ -1,0 +1,299 @@
+---
+title: 'AI Skills for Developers: How to Write Better Code with GSD'
+date: '2026-04-20'
+description: >-
+  The new AI wave is much more than generating code. When you learn to
+  orchestrate context, planning and execution, software quality moves to a new
+  level. A technical deep dive into GSD (Get Shit Done) and the workflow I'm
+  using day to day.
+tags:
+  - ai
+  - productivity
+  - gsd
+  - software-engineering
+  - ai-coding
+  - development
+  - claude
+published: true
+coverImage: 'https://images.unsplash.com/photo-1677756119517-756a188d2d94?w=1200&q=80'
+---
+
+The discourse around AI for developers has become saturated over the last few months. "AI will replace us", "AI doesn't work", "AI writes everything wrong". And in the middle of it all, many people trying to use ChatGPT as a *vibe coding* machine: fire off a prompt, paste the code, discover the bugs in production.
+
+That cycle is already getting old.
+
+What's actually changing — and this is where it's worth paying attention — isn't the raw capability of the models. It's how we **orchestrate** those models. It's the difference between using AI as a snippet generator and using AI as a **complete engineer**: one that plans, executes, verifies, and iterates over its own work.
+
+If you've read my post about [AI won't replace devs, but it will filter](/en/blog/ia-nao-vai-substituir-devs-mas-vai-filtrar), the idea is familiar. But here I want to go deeper into the practical side: **which AI skills actually matter today**, and how one in particular — **GSD (Get Shit Done)** — changed how I ship software.
+
+---
+
+## The vibe coding problem
+
+Before we talk about skills, it's worth naming the enemy.
+
+Vibe coding is when you:
+
+- open Claude or ChatGPT
+- describe a feature in two sentences
+- paste the result into the project
+- fix whatever errors the linter screams about
+- promise yourself you'll "refactor later"
+
+It works for prototypes. It breaks badly in real systems.
+
+Classic symptoms:
+
+- code that looks correct but violates project conventions
+- missing or useless tests
+- architectural decisions made by the model without context
+- inconsistency between features generated in different sessions
+- *context rot*: a long session that degrades until the model forgets what it agreed to at the start
+
+The problem isn't AI. It's the **lack of method**.
+
+---
+
+## What "AI skills" mean for developers
+
+AI skills, in the sense that matters here, are three layers chained together.
+
+### Prompt engineering
+
+The most well-known — and the most overrated when taken in isolation. Crafting clear instructions, with examples, bounding the expected output. It's the baseline. It solves pointed tasks.
+
+### Context engineering
+
+The real turning point. It's about **what goes into the model's context window**, not just what you ask. Relevant files, project conventions, decision history, existing patterns. A model with poor context and a perfect prompt produces mediocre code. The opposite — good context with a simple prompt — works better than most people imagine.
+
+### Agent workflows
+
+The next step. Instead of a linear conversation, you **orchestrate phases** with distinct roles: one agent plans, another executes, another verifies. Each phase with its own isolated, controlled context.
+
+The evolution is clear:
+
+| Era | How we use AI | Unit of work |
+|---|---|---|
+| 2022-2023 | Copy code from ChatGPT | Snippet |
+| 2024 | Smart autocomplete (Copilot, Cursor) | Line/block |
+| 2025+ | Orchestrating AI systems | Feature / Phase |
+
+The difference isn't one of degree, it's one of kind. And anyone still doing only autocomplete in 2026 is at the level of someone using Dreamweaver in 2010.
+
+---
+
+## GSD: Get Shit Done
+
+Of all the approaches I've tested in recent weeks, the one that most changed my workflow was **[GSD (Get Shit Done)](https://github.com/gsd-build/get-shit-done)**.
+
+GSD is an open-source system that combines three things that usually travel separately:
+
+- **Meta-prompting:** prompts that generate structured prompts for each phase of work
+- **Context engineering:** context isolation per phase, avoiding degradation
+- **Spec-driven development:** explicit planning before execution
+
+The problem it solves is *context rot*: that progressive degradation where the model, after 40 messages in the same session, forgets decisions, contradicts its own plan, and starts producing inconsistent code.
+
+The key difference of GSD is a simple idea to state and hard to execute well:
+
+> **Separate planning from execution.**
+
+You don't plan and execute in the same session. Each phase runs with clean context, single focus, and verifiable output.
+
+---
+
+## How GSD works in practice
+
+The default flow has four main phases:
+
+### 1. Discuss Phase
+
+Before writing a single line of plan, you talk to the agent about the problem. Ambiguities, trade-offs, assumptions, risks. The output is a shared understanding of what the phase needs to solve.
+
+### 2. Plan Phase
+
+With the problem understood, the agent produces a detailed plan: files that will be created or modified, atomic tasks, dependencies, success criteria. That plan is versioned in the repository itself, as an executable document.
+
+### 3. Execute Phase
+
+A new agent — with clean context — picks up the plan and executes it. Each task produces an **atomic commit**. If something deviates from the plan, the agent pauses and escalates the decision. No silent improvisation.
+
+### 4. Verify Work
+
+The verification phase runs goal-backward: it looks at what the phase promised to deliver and checks whether the code actually delivers that. It's not enough for tests to pass — the goal must have been reached.
+
+The non-obvious point is in the middle of all this: **each phase uses its own session/context**. The planner doesn't share a window with the executor. The executor doesn't share a window with the verifier. That eliminates context rot at the root — the model is never "tired" from a giant session because the giant session doesn't exist.
+
+---
+
+## How I'm using it day to day
+
+The pattern that emerged in my workflow looks roughly like this.
+
+**Before** (loose prompt):
+
+```
+"Claude, add Google auth to my Next.js, use NextAuth v5, put the right types"
+```
+
+Result: works 60% of the time, breaks on subtle integrations, invented tests, decisions made without me knowing.
+
+**After** (structured workflow):
+
+```bash
+/gsd-discuss-phase auth-google
+# technical conversation: session strategy? adapter? callback URL?
+# output: decisions on record
+
+/gsd-plan-phase auth-google
+# detailed plan with files, tasks, expected tests
+# I review, adjust, approve
+
+/gsd-execute-phase auth-google
+# execution in atomic commits
+# each step individually verifiable
+
+/gsd-verify-work auth-google
+# checks whether the goal was met
+# generates coverage report
+```
+
+Looks slower. It isn't. The total time until the feature actually works *properly* is lower, because I'm not spending hours fixing what the AI shipped badly on the first try.
+
+And the most valuable side effect: **the plan stays documented in the repo**. When I (or anyone) comes back to that code six months later, there's a document explaining *why* the decisions were made. It's not a code comment — it's versioned specification.
+
+---
+
+## A technical example: adding a feature with GSD
+
+Suppose I need to add image upload to cards in an app that already exists.
+
+**Flow without structure** (pretty much how we all do it):
+
+1. I open Claude
+2. "add image upload to the cards"
+3. I copy the code, paste, tweak, break three tests, fix them
+4. I find out the chosen storage isn't the one the rest of the app uses
+5. I refactor
+6. I make a giant "feat: image upload" commit
+
+**Flow with GSD:**
+
+```bash
+# Phase 1: discuss
+/gsd-discuss-phase card-image-upload
+```
+
+The agent asks things I should have asked myself:
+
+- What storage provider is already used in the project?
+- Synchronous upload or pre-signed?
+- Does type/size validation live on the client or server?
+- What's the strategy for orphaned images?
+
+```bash
+# Phase 2: plan
+/gsd-plan-phase card-image-upload
+```
+
+Out comes a plan like:
+
+- `src/lib/storage/upload.ts` — upload helper
+- `src/components/cards/CardImageUpload.tsx` — component
+- `src/server/api/cards.ts` — mutation
+- `tests/cards/image-upload.test.ts` — coverage
+- planned commits: 4
+- risks: orphaned images if the card save fails
+
+I review. Maybe I adjust something. Approve.
+
+```bash
+# Phase 3: execute
+/gsd-execute-phase card-image-upload
+```
+
+The agent executes commit by commit. If a test breaks, it pauses. If an unplanned decision comes up, it escalates.
+
+```bash
+# Phase 4: verify
+/gsd-verify-work card-image-upload
+```
+
+Checks whether what the phase promised was delivered. Produces a report. If coverage is missing, it points to where.
+
+At the end, I have:
+
+- code that follows project conventions
+- tests that actually make sense
+- versioned specification document
+- history of atomic, reviewable commits
+
+And I spent less time than I would have vibe coding.
+
+---
+
+## Why it matters: real benefits
+
+After a few months using this kind of flow, the gains I feel most:
+
+**More consistent quality.** The variance between features dropped dramatically. No more "Claude was good this week, bad this week" feeling. The result depends less on prompt luck.
+
+**Less rework.** A bug that used to show up two days later — in rushed generated code — now dies in the plan phase. Deciding well before coding is infinitely cheaper.
+
+**Predictability.** When I say "this feature ships today", I know how much is left. The plan is concrete, the phases are measurable.
+
+**Scale.** Bigger projects become viable. The difficulty of maintaining coherence in a large codebase with AI drops when each feature is a versioned, verifiable phase, not a loose chat session.
+
+**Onboarding.** If someone picks up the project a year from now, the phase specs tell the story of the decisions. Far more useful than commit messages.
+
+It doesn't become magic — the method is rigid and has a learning cost. But it's the kind of rigidity that pays off, like TDD or code review.
+
+---
+
+## AI is changing the dev's role, not eliminating it
+
+The "AI will replace devs" argument has always rested on the wrong premise: that programming is about translating idea into code.
+
+It never was.
+
+Programming is:
+
+- understanding the real problem
+- deciding trade-offs
+- modeling systems
+- communicating decisions
+- ensuring quality over time
+
+The typing-code part is a small fraction. And it's exactly the fraction AI automates best.
+
+What changes with skills like GSD is the **level at which you operate**. You stop writing so much code and start writing more **executable specification**. Stop fixing repetitive bugs and start designing verification systems. Stop being "the person who implements" and become "the person who orchestrates".
+
+That isn't a reduction of responsibility. It's a raising of the bar. Those who know how to rise will ship multiple times more. Those who stay in vibe coding — or worse, in the "I write everything by hand because AI is bad" model — will fall behind in productivity.
+
+---
+
+## How to start
+
+If you want to try:
+
+1. Install GSD on Claude Code: [github.com/gsd-build/get-shit-done](https://github.com/gsd-build/get-shit-done)
+2. Pick a medium-sized project (not a hello world)
+3. Run `/gsd-new-project` or enter an existing one with `/gsd-plan-phase`
+4. Do **one** complete feature using only the flow: discuss → plan → execute → verify
+5. Compare with your current approach
+
+The first contact is strange. You'll feel the urge to jump straight to execution. Resist — that's the vibe coding instinct.
+
+After 3-4 features through the flow, the value is clear. And going back to "loose prompt" starts to feel primitive.
+
+---
+
+## Conclusion
+
+The next decade of software development won't split between devs who use AI and devs who don't. It'll split between **devs who know how to orchestrate AI with method** and devs who just hit Tab on autocomplete.
+
+AI skills — prompt, context, orchestration — are the new baseline. And tools like GSD exist precisely to make that orchestration concrete, reproducible, and verifiable. It's not a trendy framework. It's discipline applied to a technology that disproportionately rewards those who use it rigorously.
+
+Less vibe. More method.
+
+And the code thanks you for it.

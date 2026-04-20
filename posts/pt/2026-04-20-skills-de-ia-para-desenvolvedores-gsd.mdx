@@ -1,0 +1,299 @@
+---
+title: 'Skills de IA para desenvolvedores: como escrever código melhor com GSD'
+date: '2026-04-20'
+description: >-
+  A nova onda de IA é muito mais do que gerar código. Quando você aprende a
+  orquestrar contexto, plano e execução, a qualidade do software muda de
+  patamar. Um mergulho técnico em GSD (Get Shit Done) e no fluxo que estou
+  usando no dia a dia.
+tags:
+  - ia
+  - produtividade
+  - gsd
+  - engenharia-de-software
+  - ai-coding
+  - desenvolvimento
+  - claude
+published: true
+coverImage: 'https://images.unsplash.com/photo-1677756119517-756a188d2d94?w=1200&q=80'
+---
+
+Nos últimos meses o discurso sobre IA para desenvolvedores ficou saturado. "IA vai substituir", "IA não funciona", "IA escreve tudo errado". E no meio disso, muita gente tentando usar ChatGPT como uma máquina de *vibe coding*: solta um prompt, cola o código, descobre os bugs em produção.
+
+Esse ciclo já está ficando velho.
+
+O que está mudando de verdade — e é aqui que vale prestar atenção — não é a capacidade bruta dos modelos. É a forma como a gente **orquestra** esses modelos. É a diferença entre usar IA como um gerador de snippets e usar IA como um **engenheiro completo**: que planeja, executa, verifica e iterate sobre o próprio trabalho.
+
+Se você já leu meu post sobre [IA não vai substituir devs, mas vai filtrar](/pt/blog/ia-nao-vai-substituir-devs-mas-vai-filtrar), a ideia é familiar. Mas aqui eu quero ir mais fundo na parte prática: **quais skills de IA importam hoje**, e como uma em específica — o **GSD (Get Shit Done)** — mudou a forma como eu entrego software.
+
+---
+
+## O problema do vibe coding
+
+Antes de falar de skills, vale nomear o inimigo.
+
+Vibe coding é quando você:
+
+- abre o Claude ou ChatGPT
+- descreve uma feature em duas frases
+- cola o resultado no projeto
+- corrige os erros que o linter gritar
+- promete que "depois refatora"
+
+Funciona para protótipo. Quebra feio em sistema real.
+
+Os sintomas clássicos:
+
+- código que parece certo mas viola convenções do projeto
+- testes ausentes ou inúteis
+- decisões arquiteturais tomadas pelo modelo sem contexto
+- inconsistência entre features geradas em sessões diferentes
+- *context rot*: sessão longa que degrada até o modelo esquecer o que combinou no começo
+
+O problema não é a IA. É a **falta de método**.
+
+---
+
+## O que são "skills de IA" para desenvolvedores
+
+Skills de IA, no sentido que interessa aqui, são três camadas encadeadas.
+
+### Prompt engineering
+
+A mais conhecida — e a mais superestimada quando isolada. Formular instruções claras, com exemplos, delimitando saída esperada. É o básico. Resolve tarefas pontuais.
+
+### Context engineering
+
+A virada real. É sobre **o que entra na janela de contexto do modelo**, não só o que você pede. Arquivos relevantes, convenções do projeto, histórico de decisões, padrões existentes. Um modelo com contexto ruim e prompt perfeito gera código medíocre. O contrário — contexto bom com prompt simples — funciona melhor do que a maioria imagina.
+
+### Agent workflows
+
+O passo seguinte. Em vez de uma conversa linear, você **orquestra fases** com papéis distintos: um agente planeja, outro executa, outro verifica. Cada fase com contexto próprio, isolado, controlado.
+
+A evolução fica clara:
+
+| Era | Como usamos IA | Unidade de trabalho |
+|---|---|---|
+| 2022-2023 | Copiar código do ChatGPT | Snippet |
+| 2024 | Autocomplete inteligente (Copilot, Cursor) | Linha/bloco |
+| 2025+ | Orquestração de sistemas de IA | Feature / Fase |
+
+A diferença não é de grau, é de tipo. E quem só faz autocomplete em 2026 está no nível de quem usava Dreamweaver em 2010.
+
+---
+
+## GSD: Get Shit Done
+
+De todas as abordagens que testei nas ultimas semanas, a que mais mudou meu fluxo foi o **[GSD (Get Shit Done)](https://github.com/gsd-build/get-shit-done)**.
+
+GSD é um sistema open-source que combina três coisas que normalmente andam separadas:
+
+- **Meta-prompting:** prompts que geram prompts estruturados para cada fase do trabalho
+- **Context engineering:** isolamento de contexto por fase, evitando degradação
+- **Spec-driven development:** planejamento explícito antes da execução
+
+O problema que ele resolve é o *context rot*: aquela degradação progressiva em que o modelo, depois de 40 mensagens na mesma sessão, esquece decisões, contradiz o próprio plano, e começa a gerar código inconsistente.
+
+A diferença-chave do GSD é uma ideia simples de enunciar e difícil de executar bem:
+
+> **Separar planejamento de execução.**
+
+Você não planeja e executa na mesma sessão. Cada fase roda com contexto limpo, foco único e saída verificável.
+
+---
+
+## Como o GSD funciona na prática
+
+O fluxo padrão tem quatro fases principais:
+
+### 1. Discuss Phase
+
+Antes de escrever uma linha de plano, você conversa com o agente sobre o problema. Ambiguidades, trade-offs, assumptions, riscos. A saída é um entendimento compartilhado sobre o que a fase precisa resolver.
+
+### 2. Plan Phase
+
+Com o problema entendido, o agente produz um plano detalhado: arquivos que serão criados ou modificados, tarefas atômicas, dependências, critérios de sucesso. Esse plano fica versionado no próprio repositório, como documento executável.
+
+### 3. Execute Phase
+
+Um novo agente — com contexto limpo — pega o plano e executa. Cada tarefa gera um **commit atômico**. Se algo desvia do plano, o agente pausa e escala a decisão. Nada de improvisação silenciosa.
+
+### 4. Verify Work
+
+A fase de verificação roda goal-backward: olha o que a fase prometeu entregar e checa se o código realmente entrega aquilo. Não basta os testes passarem — o objetivo precisa ter sido atingido.
+
+O ponto não-óbvio está no meio disso: **cada fase usa uma sessão/contexto próprio**. O planejador não compartilha janela com o executor. O executor não compartilha janela com o verificador. Isso elimina o context rot pela raiz — o modelo nunca fica "cansado" de uma sessão gigante porque a sessão não existe.
+
+---
+
+## Como estou usando no dia a dia
+
+O padrão que emergiu no meu fluxo é mais ou menos esse.
+
+**Antes** (prompt solto):
+
+```
+"Claude, adiciona autenticação via Google no meu Next.js, usa NextAuth v5, coloca os tipos certos"
+```
+
+Resultado: funciona em 60% dos casos, quebra em integrações sutis, testes inventados, decisões tomadas sem eu saber.
+
+**Depois** (workflow estruturado):
+
+```bash
+/gsd-discuss-phase auth-google
+# conversa técnica: estratégia de sessão? adapter? callback URL?
+# saída: decisões registradas
+
+/gsd-plan-phase auth-google
+# plano detalhado com arquivos, tarefas, testes esperados
+# eu reviso, ajusto, aprovo
+
+/gsd-execute-phase auth-google
+# execução em commits atômicos
+# cada passo verificável isoladamente
+
+/gsd-verify-work auth-google
+# checa se o objetivo foi atingido
+# gera relatório de cobertura
+```
+
+Parece mais lento. Não é. O tempo total até a feature funcionando *de verdade* é menor, porque eu não gasto horas corrigindo o que a IA entregou mal na primeira tentativa.
+
+E o efeito colateral mais valioso: **o plano fica documentado no repo**. Quando eu (ou qualquer pessoa) voltar nesse código daqui a seis meses, existe um documento explicando *por que* as decisões foram tomadas. Não é comentário no código — é especificação versionada.
+
+---
+
+## Exemplo técnico: adicionando uma feature com GSD
+
+Suponha que eu preciso adicionar upload de imagens em cards num app que já existe.
+
+**Fluxo sem estrutura** (quase todos fazemos isso):
+
+1. Abro o Claude
+2. "adiciona upload de imagem pros cards"
+3. Copio o código, colo, ajusto, quebro três testes, corrijo
+4. Descubro que o storage escolhido não é o que o resto do app usa
+5. Refatoro
+6. Faço commit gigante "feat: upload de imagem"
+
+**Fluxo com GSD:**
+
+```bash
+# Fase 1: discuss
+/gsd-discuss-phase card-image-upload
+```
+
+O agente me pergunta coisas que eu deveria ter perguntado sozinho:
+
+- Qual é o storage provider já usado no projeto?
+- Upload síncrono ou pré-assinado?
+- Validação de tipo/tamanho fica no client ou server?
+- Qual a estratégia de imagens órfãs?
+
+```bash
+# Fase 2: plan
+/gsd-plan-phase card-image-upload
+```
+
+Sai um plano tipo:
+
+- `src/lib/storage/upload.ts` — helper de upload
+- `src/components/cards/CardImageUpload.tsx` — componente
+- `src/server/api/cards.ts` — mutation
+- `tests/cards/image-upload.test.ts` — cobertura
+- commits planejados: 4
+- riscos: imagens órfãs em caso de falha no save do card
+
+Eu revejo. Talvez eu ajuste algo. Aprovo.
+
+```bash
+# Fase 3: execute
+/gsd-execute-phase card-image-upload
+```
+
+O agente executa commit por commit. Se algum teste quebra, ele pausa. Se uma decisão não estava prevista, ele escala.
+
+```bash
+# Fase 4: verify
+/gsd-verify-work card-image-upload
+```
+
+Checa se o que a fase prometeu foi entregue. Gera um relatório. Se faltou cobertura, aponta onde.
+
+No final, eu tenho:
+
+- código que segue os padrões do projeto
+- testes que fazem sentido
+- documento de especificação versionado
+- histórico de commits atômicos e revisáveis
+
+E gastei menos tempo do que gastaria no vibe coding.
+
+---
+
+## Por que isso importa: benefícios reais
+
+Depois de alguns meses usando esse tipo de fluxo, os ganhos que mais sinto:
+
+**Qualidade mais consistente.** A variância entre features caiu drasticamente. Não tem mais aquela sensação de "essa semana o Claude tava bom, essa semana tá ruim". O resultado depende menos da sorte do prompt.
+
+**Menos retrabalho.** Bug que antes aparecia dois dias depois — em código gerado às pressas — agora some na fase de plan. Decidir bem antes de codar é infinitamente mais barato.
+
+**Previsibilidade.** Quando eu digo "essa feature sai hoje", eu sei quanto falta. O plano é concreto, as fases são mensuráveis.
+
+**Escala.** Projetos maiores ficam viáveis. A dificuldade de manter coerência em um codebase grande com IA cai quando cada feature é uma fase versionada e verificável, não uma sessão solta de chat.
+
+**Onboarding.** Se alguém pega o projeto daqui a um ano, os specs das fases contam a história das decisões. Muito mais útil que commit messages.
+
+Isso não vira mágica — o método é rígido e tem custo de aprendizado. Mas é o tipo de rigidez que compensa, como TDD ou code review.
+
+---
+
+## IA está mudando o papel do dev, não eliminando
+
+O argumento de "IA vai substituir devs" sempre se apoiou na premissa errada: que programação é traduzir ideia em código.
+
+Nunca foi.
+
+Programação é:
+
+- entender o problema real
+- decidir trade-offs
+- modelar sistemas
+- comunicar decisões
+- garantir qualidade ao longo do tempo
+
+A parte de digitar código é uma fração pequena. E é exatamente a fração que a IA automatiza melhor.
+
+O que muda com skills como GSD é o **nível em que você atua**. Você deixa de escrever tanto código e passa a escrever mais **especificação executável**. Deixa de corrigir bugs repetitivos e passa a desenhar sistemas de verificação. Deixa de ser "a pessoa que implementa" e vira "a pessoa que orquestra".
+
+Isso não é uma redução de responsabilidade. É uma subida de régua. Quem souber subir, vai entregar múltiplas vezes mais. Quem ficar só no vibe coding — ou pior, no modelo de "eu escrevo tudo à mão porque IA é ruim" — vai ficar para trás em produtividade comparada.
+
+---
+
+## Como começar
+
+Se você quer testar:
+
+1. Instala o GSD no Claude Code: [github.com/gsd-build/get-shit-done](https://github.com/gsd-build/get-shit-done)
+2. Escolhe um projeto de tamanho médio (não um hello world)
+3. Roda `/gsd-new-project` ou entra em um existente com `/gsd-plan-phase`
+4. Faz **uma** feature completa usando só o fluxo: discuss → plan → execute → verify
+5. Compara com sua forma atual
+
+O primeiro contato é estranho. Dá vontade de pular direto pra execução. Resista — é o instinto do vibe coding.
+
+Depois de 3-4 features no fluxo, o valor fica claro. E a volta pro "prompt solto" começa a parecer primitiva.
+
+---
+
+## Conclusão
+
+A próxima década de desenvolvimento de software não vai se separar entre devs que usam IA e devs que não usam. Vai se separar entre **devs que sabem orquestrar IA com método** e devs que só apertam Tab no autocomplete.
+
+Skills de IA — prompt, contexto, orquestração — são a nova base. E ferramentas como o GSD existem justamente para tornar essa orquestração concreta, reproduzível e verificável. Não é framework da moda. É disciplina aplicada a uma tecnologia que recompensa desproporcionalmente quem usa com rigor.
+
+Menos vibe. Mais método.
+
+E o código agradece.
