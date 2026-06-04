@@ -1,0 +1,289 @@
+---
+title: 'Agent Toolkit: meu setup de IA para transformar o terminal em um workspace de agentes'
+date: '2026-06-04'
+description: >-
+  Criei um instalador open-source para configurar Claude Code, Codex CLI,
+  OpenCode, Gemini CLI, Graphify, GSD e minhas skills de desenvolvimento com um
+  único comando. Mais do que ferramenta, é uma forma de padronizar workflows de
+  IA no terminal.
+tags:
+  - ia
+  - agent-toolkit
+  - ai-coding
+  - terminal
+  - produtividade
+  - desenvolvimento
+  - open-source
+published: true
+coverImage: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=1200&q=80'
+---
+
+Nos últimos meses, uma parte cada vez maior do meu trabalho saiu do editor e voltou para o terminal.
+
+Não porque o editor deixou de importar. Mas porque os agentes de código mais úteis hoje não são apenas autocomplete com uma UI bonita. Eles leem o projeto, executam comandos, editam arquivos, rodam testes, criam commits e precisam operar no mesmo ambiente onde o software realmente vive.
+
+O terminal virou um **runtime para agentes de IA**.
+
+Só que isso trouxe outro problema: cada máquina, cada runtime e cada agente começavam com um setup diferente. Claude Code de um jeito. Codex CLI de outro. OpenCode em outro lugar. Gemini com mais uma convenção. Skills espalhadas. Ferramentas instaladas manualmente. Contexto duplicado. E, no fim, a sensação de que eu estava gastando energia demais para preparar o ambiente antes de fazer o trabalho de verdade.
+
+Foi daí que nasceu o **Agent Toolkit**.
+
+---
+
+## O problema: workflow de IA sem base vira improviso
+
+Usar IA para desenvolver já não é mais novidade. O difícil agora é fazer isso com consistência.
+
+No começo, meu fluxo era simples:
+
+- abrir um agente
+- explicar o projeto
+- lembrar quais ferramentas estavam disponíveis
+- copiar instruções antigas
+- instalar uma skill manualmente
+- rodar alguma validação
+- repetir tudo em outro runtime depois
+
+Isso funciona por alguns dias. Depois vira ruído.
+
+O problema não era um agente específico. Era a falta de uma base reproduzível. Eu queria conseguir abrir um projeto novo, ou uma máquina nova, e chegar rapidamente no mesmo ambiente: ferramentas, skills, workflows, validações e padrões mínimos de segurança.
+
+Não queria um "prompt mágico". Queria um **setup operacional**.
+
+---
+
+## O que é o Agent Toolkit
+
+O **[Agent Toolkit](https://github.com/raniellimontagna/agent-toolkit)** é um instalador open-source que configura o meu workspace de agentes de código com um comando:
+
+```bash
+npx -y @ranimontagna/agent-toolkit
+```
+
+Ele instala e configura as ferramentas que uso para trabalhar com agentes no terminal:
+
+| Área | Para que serve |
+|---|---|
+| **RTK** | Proxy de shell consciente de tokens para sessões com agentes |
+| **Caveman** | Modos de resposta mais curtos e objetivos |
+| **Superpowers** | Workflows de planejamento, TDD, debugging, review e entrega |
+| **Graphify** | Grafo navegável do código, docs e contexto do projeto |
+| **GSD** | Planejamento, execução e verificação em fases |
+| **Frontend Skills** | Skills externas de design instaladas por fontes pinadas |
+| **Custom Skills** | Skills empacotadas no próprio repositório, por domínio técnico |
+
+E ele não fica preso a um único runtime. Hoje o toolkit mira:
+
+- Claude Code
+- Codex CLI
+- OpenCode
+- Gemini CLI
+
+A ideia é simples: eu escolho quais ferramentas e quais runtimes quero configurar, vejo o status detectado da máquina, reviso o plano final e só então instalo.
+
+---
+
+## Por que isso não é só um script de instalação
+
+Um script que instala dependências é útil. Mas o Agent Toolkit nasceu para resolver uma camada um pouco mais acima: **workflow**.
+
+O ponto não é apenas "ter o Codex instalado" ou "copiar algumas skills". O ponto é padronizar como um projeto fica pronto para agentes trabalharem com qualidade.
+
+Isso envolve:
+
+- detectar o que já existe antes de instalar
+- evitar reinstalação desnecessária
+- separar instalação global e local
+- permitir seleção granular de skills
+- manter fontes externas pinadas
+- preservar licenças e créditos de skills de terceiros
+- rodar validações antes de publicar novas versões
+- publicar no npm com provenance
+
+Essa última parte é importante. Quando você instala algo que vai configurar ferramentas no seu ambiente de desenvolvimento, supply chain importa.
+
+Por isso o projeto usa `pnpm`, lockfile, auditoria, CI, secret scan, versões fixas em `tools.lock.json` e publicação via GitHub Actions com provenance. Não é segurança perfeita, mas é uma base muito melhor do que sair rodando `curl | bash` sem saber o que mudou.
+
+O cuidado aqui foi tratar segurança como parte do workflow, não como uma nota de rodapé no README.
+
+Hoje o CI roda checagens de qualidade, auditoria de dependências, dependency review em PRs e Gitleaks no histórico do repositório para reduzir o risco de vazamento de segredos. A instalação usa `pnpm install --frozen-lockfile`, a auditoria roda com lifecycle scripts desabilitados e as fontes externas ficam declaradas em `tools.lock.json`.
+
+Também bloqueei fontes mutáveis por padrão. Isso significa que overrides como `@latest`, pacotes npm sem versão fixa ou fontes GitHub sem commit SHA completo não passam sem uma opção explícita. Em alguns casos, como downloads binários, o instalador também valida checksum antes de extrair.
+
+Esse tipo de cuidado é especialmente importante porque o Agent Toolkit não instala apenas uma dependência de projeto. Ele configura CLIs, skills e arquivos em diretórios usados por agentes. Se a ferramenta mexe no ambiente onde outros agentes vão operar, ela precisa ter uma postura mais cuidadosa com origem, versão, validação e publicação.
+
+---
+
+## A parte mais valiosa: Custom Skills
+
+O recurso que mais cresceu foi o sistema de **Custom Skills**.
+
+Hoje o repositório já inclui skills organizadas por pacote:
+
+```text
+skills/
+  core/
+  backend/
+  frontend/
+  general/
+  devops/
+```
+
+Dentro disso, existem skills para coisas que uso ou quero ter à mão com frequência:
+
+- Fastify
+- API design
+- Postgres
+- Docker
+- Go
+- Java
+- Kotlin
+- Python
+- React
+- React Native
+- Astro
+- acessibilidade
+- UI/UX
+- code review
+
+O detalhe importante: o usuário não precisa instalar tudo.
+
+Dá para listar o que existe:
+
+```bash
+npx -y @ranimontagna/agent-toolkit --skills-list
+```
+
+Dá para instalar só backend:
+
+```bash
+npx -y @ranimontagna/agent-toolkit \
+  --skills-only \
+  --codex \
+  --skills-package backend
+```
+
+Dá para instalar só Python:
+
+```bash
+npx -y @ranimontagna/agent-toolkit \
+  --skills-only \
+  --codex \
+  --skills-scope backend/python
+```
+
+Ou só uma skill específica:
+
+```bash
+npx -y @ranimontagna/agent-toolkit \
+  --skills-only \
+  --codex \
+  --skills-path backend/python/python-testing
+```
+
+Isso muda a relação com contexto. Em vez de depender de uma conversa enorme explicando padrões, eu posso instalar instruções específicas para o runtime que estou usando e deixar o agente operar com um vocabulário melhor desde o início.
+
+---
+
+## O terminal como cockpit
+
+Uma coisa que ficou clara enquanto eu construía o Agent Toolkit: o terminal está virando uma espécie de cockpit para desenvolvimento com IA.
+
+Não é só onde você roda `git status`.
+
+É onde você:
+
+- instala runtimes de agentes
+- injeta skills
+- roda verificação
+- consulta grafo do projeto
+- executa planos
+- publica pacotes
+- valida supply chain
+- acompanha o estado real do repositório
+
+Isso combina muito com a forma como eu gosto de trabalhar. O agente pode sugerir, editar e executar, mas o terminal continua sendo a fronteira concreta entre intenção e mudança real.
+
+E essa fronteira precisa ser legível.
+
+Por isso o instalador usa um menu visual com [Clack](https://github.com/bombshell-dev/clack). Ele mostra o status detectado, permite escolher ferramentas, runtimes, escopo de instalação e skills, e exibe um plano antes de fazer qualquer alteração.
+
+O objetivo não é esconder complexidade. É tornar a complexidade navegável.
+
+---
+
+## O que aprendi construindo isso
+
+Esse projeto começou pequeno: um jeito de instalar algumas ferramentas que eu usava.
+
+Mas ele rapidamente virou um exercício de engenharia de workflow.
+
+Algumas decisões que pareciam detalhe fizeram muita diferença:
+
+- **não instalar tudo às cegas**: detectar primeiro, instalar depois
+- **separar skills próprias de skills de terceiros**: crédito e licença importam
+- **pinagem de fontes externas**: `@latest` é confortável, mas perigoso
+- **segurança como workflow**: leak scan, auditoria e provenance precisam estar no caminho padrão
+- **publicar via npm**: um comando universal é melhor do que documentação longa
+- **dar suporte a múltiplos runtimes**: cada pessoa usa agentes de um jeito
+- **manter seleção granular**: contexto demais também atrapalha
+
+Esse último ponto é subestimado. A tendência quando falamos de IA é jogar mais contexto, mais instruções, mais ferramentas. Mas agentes também sofrem com excesso de contexto. Instalar só o que faz sentido para aquele projeto deixa o fluxo mais limpo.
+
+---
+
+## Como testar
+
+Se você quiser experimentar:
+
+```bash
+npx -y @ranimontagna/agent-toolkit
+```
+
+Ou, se quiser ir direto para um runtime específico:
+
+```bash
+npx -y @ranimontagna/agent-toolkit --all --codex
+```
+
+Para instalar tudo nos runtimes suportados:
+
+```bash
+npx -y @ranimontagna/agent-toolkit --all --all-runtimes
+```
+
+E para ver as skills disponíveis:
+
+```bash
+npx -y @ranimontagna/agent-toolkit --skills-list
+```
+
+Repositório:
+
+[github.com/raniellimontagna/agent-toolkit](https://github.com/raniellimontagna/agent-toolkit)
+
+Pacote npm:
+
+[npmjs.com/package/@ranimontagna/agent-toolkit](https://www.npmjs.com/package/@ranimontagna/agent-toolkit)
+
+---
+
+## Conclusão
+
+O Agent Toolkit não é uma tentativa de criar "o setup definitivo" para todo mundo.
+
+É o meu setup, transformado em uma ferramenta reproduzível.
+
+Mas eu acredito que a direção é maior que o projeto: o próximo salto em produtividade com IA não vem só de modelos melhores. Vem de **ambientes melhores**. Ambientes onde contexto, ferramentas, skills, verificação e segurança fazem parte do fluxo desde o começo.
+
+Agentes de código estão ficando bons. Agora a pergunta é se o nosso workflow está ficando bom o suficiente para usá-los direito.
+
+Esse projeto é minha resposta prática para isso.
+
+E ele ainda está longe de estar "finalizado". Dá para melhorar a UX, adicionar mais skills, ampliar testes em outros ambientes, deixar o modelo de segurança mais explícito e refinar a forma como os runtimes compartilham contexto.
+
+Por isso o repositório está aberto para sugestões, issues e PRs. Se você usa agentes no terminal e tem uma ideia, uma skill útil, um caso quebrado ou uma preocupação de segurança, provavelmente vale abrir uma conversa.
+
+---
+
+*Se você trabalha com Claude Code, Codex CLI, OpenCode, Gemini CLI ou está montando seu próprio fluxo de agentes no terminal, testa o Agent Toolkit e me conta o que faltou. Esse tipo de ferramenta melhora muito mais rápido quando nasce de uso real.*
