@@ -1,0 +1,145 @@
+---
+title: >-
+  De la terminal al cockpit: montando un Mac nuevo para agentes de IA con Orca,
+  Superset y Maestri
+date: '2026-07-11'
+description: >-
+  Monté un Mac desde cero con mi setup reproducible y pasé las últimas semanas
+  probando la capa que faltaba: apps que orquestan agentes. Superset como hub,
+  Maestri como canvas multiagente y Orca con acceso desde el móvil vía
+  Tailscale. Y lo que cambió en el Agent Toolkit desde el último post.
+tags:
+  - ia
+  - agentes
+  - mac
+  - orca
+  - superset
+  - maestri
+  - agent-toolkit
+  - productividad
+published: false
+coverImage: ''
+---
+
+En [el post de junio](/blog/agent-toolkit-workflows-ia-terminal), escribí que la terminal se había convertido en un **runtime para agentes de IA** — y que el Agent Toolkit era mi forma de hacer ese runtime reproducible.
+
+Semanas después, la tesis pasó por la prueba más honesta que existe: un Mac nuevo, de fábrica, sobre mi mesa.
+
+Este post trata de lo que pasó después del `git clone`. De la capa sobre la que todavía no había escrito: cuando el runtime está listo, **¿quién orquesta a los agentes?**
+
+---
+
+## La prueba del Mac nuevo
+
+Todo setup reproducible vive una mentira cómoda hasta que llega la máquina nueva.
+
+El mío vive en un repositorio público, [mac-setup](https://github.com/raniellimontagna/mac-setup): Brewfile, dotfiles, defaults de macOS, CLIs de IA, plugins, skills y scripts que clonan repositorios por organización. La promesa era simple: clonar, ejecutar `setup.sh` y llegar al mismo entorno.
+
+Y, con algunos ajustes que volvieron al repositorio el mismo día, funcionó. En una tarde el Mac nuevo tenía:
+
+- la toolchain completa (Node vía fnm, pnpm, Go, Python, Docker)
+- los cuatro runtimes de agente que uso (Claude Code, Codex, OpenCode, Gemini)
+- skills y plugins instalados por el Agent Toolkit
+- todos los repositorios personales y de las empresas clonados y funcionando
+
+La parte interesante no fue lo que funcionó. Fue notar lo que **todavía no tenía lugar en el setup**: las apps que viven por encima de los agentes.
+
+---
+
+## La capa que faltaba: orquestación
+
+Tener cuatro CLIs de agente instaladas es como tener cuatro instrumentos afinados y ninguna partitura.
+
+En el día a día, los problemas reales son otros:
+
+- alternar entre agentes sin perder el hilo de cuál hace qué
+- ejecutar más de un agente en paralelo sin hacer malabares con ventanas
+- seguir (y aprobar) lo que un agente está haciendo cuando **no estoy frente al Mac**
+
+En las últimas semanas probé tres apps que atacan exactamente esa capa. Ninguna reemplaza la terminal — todas asumen que la terminal es el runtime y se posicionan como cockpit.
+
+| App | Qué resuelve |
+|---|---|
+| **Superset** | Hub que agrupa las CLIs de agente en un solo lugar, con presets configurables |
+| **Maestri** | Canvas multiagente: terminales conectadas, roles y mensajes entre agentes |
+| **Orca** | Orquestador con daemon local y acceso remoto — incluso desde el móvil |
+
+Vale aclarar: estoy **probando**, no decretando. Este mercado cambia demasiado rápido para veredictos definitivos. Pero cada una ya me mostró algo que no quiero perder.
+
+---
+
+## Superset: un techo para todos los agentes
+
+Superset es la idea más simple de las tres: en vez de esparcir Claude Code, Codex, Gemini y OpenCode en pestañas de terminal, todos viven en una sola app.
+
+La función que me conquistó fueron los **presets**: cualquier CLI se convierte en un agente del hub. Cuando salió la CLI de Grok, agregarla fue llenar un formulario con nombre y comando — sin esperar soporte oficial.
+
+Es el tipo de herramienta que no cambia *cómo* trabajan los agentes, pero cambia cuánta fricción existe entre ellos y yo. Para alguien que alterna runtimes todo el día (yo), eso se paga solo rápidamente.
+
+---
+
+## Maestri: agentes como equipo, no como pestañas
+
+Maestri parte de otra pregunta: ¿y si los agentes pudieran **hablar entre sí**?
+
+Es un canvas donde cada terminal es un nodo. Reclutas agentes, les das roles y los conectas. Los agentes intercambian mensajes por una CLI propia (`maestri ask "Nombre" "tarea"`), y tú observas la coordinación suceder en el canvas.
+
+Mi experimento en curso: un equipo con **Codex como orquestador y Grok como ejecutor**. El orquestador tiene un prompt de rol que le prohíbe implementar — descompone, delega una tarea a la vez con criterio de terminado, revisa críticamente lo que vuelve y solo acepta lo que verificó. El ejecutor hace lo contrario: implementa exactamente lo que se pidió, pregunta cuando se traba y reporta con salvedades.
+
+Si leíste el post de junio, reconocerás el patrón: es la misma disciplina de workflow que intento codificar en las skills, ahora aplicada a la comunicación **entre** agentes. Demasiado pronto para decir si rinde más que un solo agente bien instruido — pero es el experimento más divertido del setup actual.
+
+---
+
+## Orca: el móvil como control remoto
+
+Orca fue la sorpresa de las tres.
+
+Ejecuta un daemon en el Mac que gestiona sesiones de agente, y la app expone eso a otros dispositivos con emparejamiento de extremo a extremo. Traducción: **sigo y apruebo lo que los agentes están haciendo desde el móvil**.
+
+La magia de conectar desde cualquier lugar no es de Orca — es de [Tailscale, que ya era la columna vertebral de mi homelab](/blog/homelab-cloudflare-tailscale-nginx-pihole). Orca escucha en un puerto local; con el Mac y el móvil en la misma tailnet, la app móvil apunta a la IP del Mac (o a su nombre vía MagicDNS) y listo. Sin exponer puertos a internet, sin túnel público, sin configuración heroica.
+
+El flujo que esto desbloquea es real: dejo un agente ejecutando una tarea larga, me alejo del escritorio, y cuando necesita una aprobación la resuelvo desde el sofá. El agente no queda bloqueado esperando a que vuelva.
+
+Es también un recordatorio de que la infraestructura personal se compone: el post del homelab (marzo), el del toolkit (junio) y este cuentan la misma historia en capas.
+
+---
+
+## Qué cambió en el Agent Toolkit desde junio
+
+El [post anterior](/blog/agent-toolkit-workflows-ia-terminal) presentó el toolkit. Desde entonces publicó una secuencia de releases, y tres cambios merecen registro.
+
+**1. La seguridad se volvió más paranoica (en el buen sentido).** Los overrides de entorno que cambian la identidad de una fuente — otro paquete npm, otro repositorio de GitHub — ahora exigen una flag explícita, cerrando un vector de redirección silenciosa. Las fuentes de GitHub se verifican contra el commit SHA fijado después del clon. Y el soporte de Windows se corrigió de verdad (lanzar shims de npm en Node 18+ es menos obvio de lo que parece).
+
+**2. Nació el paquete `planning-skills`.** El toolkit ahora instala las skills de entrevista de Matt Pocock — `grill-me`, `grilling`, `grill-with-docs` y `domain-modeling` — fijadas por commit, en todos los runtimes. Su objetivo es atacar el mayor modo de fallo del desarrollo con IA: que el agente construya lo equivocado por desalineación. Antes de implementar, el agente te entrevista, una pregunta a la vez, cada una con respuesta recomendada, hasta cerrar un entendimiento compartido. La variante con docs además registra un glosario y ADRs en el repositorio mientras las decisiones suceden.
+
+**3. Nació la skill `onboard-repo`.** Esta cierra un ciclo. Es una skill que le enseña al agente a preparar un repositorio para desarrollo con IA: detectar el stack, instalar solo las skills que tienen sentido para ese proyecto (usando el propio toolkit), y organizar los archivos de instrucciones — un `AGENTS.md` canónico, un `CLAUDE.md` que apunta a él, config de MCP cuando tiene sentido. En su primera prueba contra un repositorio real, encontró un error en la propia documentación que la generó — que se convirtió en un release de corrección el mismo día. Una herramienta que se prueba a sí misma es una herramienta que mejora.
+
+La lista completa está en el [CHANGELOG](https://github.com/raniellimontagna/agent-toolkit/blob/main/CHANGELOG.md).
+
+---
+
+## Lo que todavía no sé
+
+Siendo honesto sobre el estado de las cosas:
+
+- **No sé cuáles de estas tres apps sobreviven** en mi flujo dentro de tres meses. Superset tiene el caso de uso más obvio; Orca tiene la función más diferenciada; Maestri tiene la idea más ambiciosa. Son apuestas distintas sobre cómo evolucionará este trabajo.
+- **La orquestación multiagente todavía tiene que probarse.** Coordinar agentes tiene costo (tokens, latencia, mi atención). El equipo Codex+Grok es un experimento, no una recomendación.
+- **La frontera app vs. terminal todavía se está dibujando.** Hoy las apps agregan valor en visibilidad y acceso remoto. El trabajo de verdad sigue sucediendo en el runtime — y está bien que así sea.
+
+Lo que sí sé: el costo de experimentar se desplomó. Con un entorno reproducible, probar una de estas apps es instalarla, apuntarla a los runtimes que ya existen y usarla. Si no cuaja, se elimina — el setup sigue íntegro en el repositorio.
+
+---
+
+## Conclusión
+
+El post de junio terminaba diciendo que el próximo salto de productividad con IA vendría de **mejores entornos**, no solo de mejores modelos.
+
+Montar un Mac desde cero fue la prueba práctica: el entorno se reconstruyó en una tarde. Pero la lección nueva es que "entorno" no termina en la terminal. La capa de orquestación — quién agrupa, quién coordina, quién te deja aprobar una acción desde el sofá — también se está volviendo parte del setup.
+
+Mi flujo hoy tiene tres alturas: la **terminal** como runtime, las **apps** como cockpit y el **móvil** como control remoto. Cada capa reproducible, cada una versionada donde se puede.
+
+Y, como siempre, nada de esto está terminado. Es mi setup de julio de 2026 — documentado públicamente justamente para poder cambiar sin miedo.
+
+---
+
+*Si estás probando Orca, Superset, Maestri o cualquier otra capa de orquestación para agentes, cuéntame qué te está funcionando. Este tipo de setup evoluciona mucho más rápido comparando notas de uso real.*
