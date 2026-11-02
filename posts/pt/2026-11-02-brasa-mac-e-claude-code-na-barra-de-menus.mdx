@@ -1,0 +1,188 @@
+---
+title: 'Brasa: o Mac e o Claude Code de relance, na barra de menus'
+date: '2026-11-02'
+description: >-
+  Fiz um app nativo de barra de menus que junta o uso do Claude Code, CPU,
+  memória e disco, a rolagem certa para trackpad e mouse e um jeito de manter o
+  Mac acordado com a tampa fechada. Ele tomou o lugar de vários apps pequenos e
+  mostra uma coisa que a IA mudou: agora vale a pena fazer software sob medida
+  para um incômodo muito específico.
+tags:
+  - macos
+  - swift
+  - swiftui
+  - claude-code
+  - ia
+  - produtividade
+  - side-project
+  - windows
+published: true
+coverImage: >-
+  https://cdn.ranimontagna.com/blog-covers/d88d51cb-bc40-41f8-9707-d8b0d9c5fcbf.webp
+---
+
+Esta semana eu queria uma coisa simples: passar o KVM do Mac para o PC sem o Mac dormir.
+
+Meu MacBook fica fechado, ligado a dois monitores por um KVM que também vai para o meu PC. Quando eu passava os monitores para o PC, o macOS via a tampa fechada e nenhuma tela ligada. E dormia. Junto com ele dormiam os agentes que estavam rodando, as sessões de SSH e os builds pela metade.
+
+A solução virou uma chave nova no **Brasa**. Foi aí que percebi que nunca escrevi aqui sobre ele, mesmo sendo o app que fica aberto o dia inteiro no meu Mac.
+
+---
+
+## O que é o Brasa
+
+O Brasa é um app nativo de barra de menus, feito em SwiftUI. O nome vem da ideia de ver, de relance, se está tudo na brasa: o Mac trabalhando e o Claude Code com fôlego para continuar.
+
+Ele nasceu de uma pergunta que eu fazia várias vezes por dia: **dá para continuar nesta tarefa ou vou bater no limite no meio dela?**
+
+Com o tempo, ele foi engolindo outras coisas:
+
+- o monitor de CPU, memória e disco que eu usava, o [Disco](https://github.com/RogerBrusamarello/disco-macos);
+- o [LinearMouse](https://linearmouse.app), que eu só usava para deixar o trackpad e o mouse com rolagens diferentes;
+- e agora o que o Amphetamine faz: manter o Mac acordado com a tampa fechada.
+
+Dois apps a menos abertos o dia inteiro, um que eu nem precisei instalar e um ícone a mais na barra. Mais para o fim, conto por que trocar app pronto por app feito em casa só passou a valer a pena agora.
+
+![O painel do Brasa: fechado e com o detalhe da janela de 5 horas aberto](https://cdn.ranimontagna.com/blog-content/eafbbf97-7a25-4891-a43a-5c2454abbf3c.webp)
+
+---
+
+## O uso do Claude Code, de relance
+
+O ícone na barra é a chama do Brasa dentro de um anel. O anel é quanto da janela de 5 horas do Claude Code já foi usado. O número ao lado usa a fonte do relógio, alinhado pelos dígitos para não ficar pulando.
+
+Um clique abre um painel de vidro, no estilo da Central de Controle do macOS 26. O primeiro módulo é a conta:
+
+- **5 horas e semana**, cada uma com a barra, o percentual e a hora em que zera.
+- **A marca de ritmo ideal**: um traço na barra mostra onde o uso estaria se fosse uniforme até a janela zerar. Se a barra passou da marca, estou gastando mais rápido do que a janela aguenta.
+- **A semana em dias úteis**: "Média de 21% por dia útil; cabem 19% até zerar. No ritmo, a semana acaba na quinta." É a frase que mais me faz mudar de plano.
+- Clicando no anel, abre o **gráfico de queima da janela**: o uso até agora, a guia de uso uniforme tracejada, o limite e, quando faz sentido, a projeção pontilhada até ele. Embaixo vem o ritmo em frase: "+22 pts/h, dentro do ritmo que dura até zerar."
+
+A previsão é conservadora de propósito. Ela usa o ritmo da última hora e só aparece se o uso subiu pelo menos 2 pontos em 10 minutos ou mais, e se o limite chega antes de a janela zerar. Previsão que aparece toda hora vira ruído.
+
+Mais abaixo fica o módulo **Agora**, que responde à pergunta do começo antes de qualquer número: "Claude aguenta até zerar (2h09)".
+
+E tem **avisos**: uma notificação uns 20 minutos antes de a janela encher, outra quando enche e outra quando libera. Assim eu fecho a tarefa num ponto bom, em vez de ser cortado no meio.
+
+Os números vêm da statusline do Claude Code e da própria Anthropic. Um script meu, que roda junto com o Claude Code, grava cada leitura, e o Brasa lê esse retrato a cada 30 segundos ou assim que o arquivo muda. Leitura velha não finge que está certa: o anel vira pontilhado, com "?", e o detalhe diz há quanto tempo foi a última.
+
+Um detalhe que nasceu de uma dor real: se algum hook ou a statusline de que essa leitura depende some do `settings.json` do Claude Code (já aconteceu de outro app tirar), o painel abre com um aviso e um botão para religar.
+
+---
+
+## O Mac trabalhando
+
+Logo abaixo, três anéis: CPU, memória e disco.
+
+- **CPU**, com a carga do sistema.
+- **Memória** contada como no Monitor de Atividade: memória de apps, fixa e comprimida. O estado vem da **pressão de memória** do macOS, não do percentual. Memória alta com pressão normal não é problema; pressão em alerta é.
+- **Disco**, com o espaço livre como o Finder conta. Atenção a partir de 85% e crítico a partir de 95%, porque disco cheio só preocupa perto do fim.
+
+E o módulo **Mais usam memória**: os três apps que mais usam memória (abre para cinco, com o swap), **somando os processos auxiliares e o que foi aberto no terminal de cada app**. Isso faz diferença: o Chrome e um terminal cheio de agentes aparecem com o peso real, não picados em dezenas de processos. Cada linha tem um ⓧ para forçar o encerramento, com confirmação. A lista só é lida com o painel aberto.
+
+As cores sempre vêm com forma: azul para folga, laranja com triângulo para atenção, vermelho com × para crítico. Dá para ler o estado mesmo sem distinguir as cores.
+
+Na barra, dá para ligar blocos pequenos de CPU, RAM e HD ao lado do ícone, com o rótulo em cima e o valor embaixo, do tamanho certo para caber ao lado do notch.
+
+![Variações da barra de menus: escuro, claro, sem leitura e com os blocos de CPU, RAM e HD](https://cdn.ranimontagna.com/blog-content/c120deb3-0bfe-4ef3-9bfb-a1c3a338f058.webp)
+
+---
+
+## Rolagem natural no trackpad, tradicional no mouse
+
+O macOS tem uma chave só de "Rolagem natural" para o trackpad e o mouse. Eu quero natural no trackpad e tradicional na roda do mouse. Era só para isso que eu tinha o LinearMouse.
+
+O Brasa resolve com um *event tap*: ele inverte o aparelho que ficou do lado errado. Com a chave do sistema desligada, inverte o trackpad; ligada, inverte o mouse. Para saber quem é quem, ele olha o tipo de evento: trackpad e Magic Mouse rolam em eventos contínuos, a roda do mouse rola em linhas.
+
+Isso precisa da permissão de Acessibilidade, e aí apareceu a primeira briga com o sistema. Assinado ad-hoc, o app muda de identidade a cada build, e o macOS passa a tratar cada build como outro app. A permissão caía toda vez. A saída foi um certificado local, autoassinado, que mantém a mesma identidade entre builds.
+
+Ele também percebe quando o LinearMouse está aberto (os dois juntos inverteriam duas vezes) e oferece fechá-lo.
+
+---
+
+## Acordado com a tampa fechada
+
+De volta ao começo do post.
+
+Com a tampa fechada, o macOS só fica acordado enquanto enxerga um monitor externo. Quando o KVM troca de computador, o sistema marca que a tampa fechada deve causar sono, e o Mac dorme na hora.
+
+Minha primeira ideia foi a trava de energia que qualquer app pode pedir ao sistema. Só que a que segura esse caso, `PreventSystemSleep`, está marcada no próprio cabeçalho da Apple como descontinuada desde o OS X 10.9 e "não suportada em nenhuma versão". Ou seja: um app comum, sozinho, não segura a tampa fechada.
+
+O que segura é o `pmset -a disablesleep 1`, e ele precisa de root. Então a chave funciona assim:
+
+- Na primeira vez que você liga, o macOS pede a senha uma vez. O Brasa grava uma regra em `/etc/sudoers.d/brasa-tampa`, conferida pelo `visudo`, que libera sem senha **só** estes dois comandos:
+
+```
+seu-usuario ALL=(root) NOPASSWD: /usr/bin/pmset -a disablesleep 0, /usr/bin/pmset -a disablesleep 1
+```
+
+- Daí em diante, ligar e desligar é instantâneo.
+- **Só vale na tomada.** Se o Mac vai para a bateria, o Brasa destrava o sono sozinho e, se a tampa estiver fechada sem monitor, põe o Mac para dormir na hora. É o que impede o Mac de virar um forno dentro da mochila.
+- Voltou para a tomada, trava de novo. Saiu do Brasa, destrava.
+
+![A chave da tampa fechada no painel: desligada, ligada na tomada e pausada na bateria](https://cdn.ranimontagna.com/blog-content/0470f0ce-48e5-4dc8-aa56-3434220d6bfb.webp)
+
+Se você tem um setup parecido e não usa o Brasa, a dica vale do mesmo jeito: `sudo pmset -a disablesleep 1` resolve na mão. Só não esqueça de voltar para `0` antes de guardar o Mac.
+
+---
+
+## Também no Windows
+
+O PC do outro lado do KVM ganhou o seu Brasa também: o mesmo painel, na bandeja perto do relógio, feito em C# com WPF.
+
+Lá a memória tem duas partes: a do Windows e a do Ubuntu no WSL. A VM do WSL tem teto próprio e trava quando enche, mesmo com o Windows folgado. Por isso o painel mostra as duas, e avisa quando o Ubuntu chega a 90% do teto dele.
+
+O cuidado principal foi **não acordar o Ubuntu**. O app do Windows nunca chama o WSL em ciclo, porque isso manteria a VM ligada o tempo todo. Dentro do Ubuntu, um timer do systemd grava um arquivo a cada 30 segundos, e o Brasa do Windows só lê esse arquivo e as APIs do próprio Windows. Com o Ubuntu desligado, o painel mostra a última leitura, com a hora, e "Ubuntu desligado".
+
+A lógica (anéis, previsão, histórico, avisos e textos) foi portada do Swift para uma biblioteca em C# com testes, e o app é compilado no Mac e instalado no PC por SSH, com um script só.
+
+---
+
+## Software sob medida, na era da IA
+
+Olhando a lista do que o Brasa faz, dá para notar um padrão: quase nada aqui é inédito. Monitor de CPU existe aos montes. O LinearMouse resolve a rolagem muito bem. O Amphetamine mantém Macs acordados há anos.
+
+O ponto é outro. Cada um desses apps resolve um problema genérico para milhares de pessoas, e eu usava uma fatia pequena de cada um. Do LinearMouse, eu usava uma única chave. Do Amphetamine, eu só precisaria de um modo.
+
+Antes, trocar o app pronto por um meu não fazia sentido. Escrever um *event tap*, entender o IOKit, descobrir por que a permissão de Acessibilidade cai a cada build, montar uma regra de sudoers que o `visudo` aceita: cada coisinha dessas era um fim de semana. Eu nunca teria tempo. Instalava o app pronto e convivia com os 90% que não usava.
+
+Com agentes de código, essa conta mudou. A rolagem por aparelho, que substituiu o LinearMouse, são 182 linhas de Swift. A chave da tampa fechada são umas 260 linhas de lógica, mais o painel e os testes, e saiu numa conversa só: da pergunta "o Mac dorme se eu trocar o KVM?" até o app instalado, com a regra do sudoers conferida antes de rodar como root. Eu decidi o que queria e revisei. O agente leu o cabeçalho da Apple, escreveu, testou e me mostrou as prévias.
+
+Isso abre espaço para um tipo de software que quase não existia: **o app que otimiza um ponto muito específico da rotina de uma pessoa só**. Ele não precisa servir para todo mundo, não precisa de tela de configuração para casos que você não tem e não precisa ser vendido. Precisa só fazer exatamente o que você quer, do jeito que você quer.
+
+Virou uma regra para mim: se o macOS já faz, não tenho app nenhum. Foi assim que o Shottr deu lugar ao print nativo do sistema. Se o macOS não faz, vai para o Brasa.
+
+O custo não sumiu, só mudou de lugar. Agora sou eu que mantenho: se o macOS mudar alguma coisa, ninguém vai lançar uma atualização por mim. Mas manter algo pequeno, meu e documentado custa bem menos do que eu imaginava. E, com o agente do lado, quase sempre é só mais uma conversa.
+
+---
+
+## Como ele é feito
+
+Algumas escolhas que deixaram o Brasa fácil de manter:
+
+- **Sem projeto do Xcode.** Um `build.sh` compila com o `swiftc`, gera o ícone, assina, instala em `~/Applications`, registra o widget e cria um LaunchAgent para abrir no login. Rodar de novo recompila e reinicia o app.
+- **O ícone é desenhado pelo próprio app.** A brasa, com a chama sobre carvões acesos, é uma view SwiftUI que o app exporta em 1024 px; o `build.sh` transforma isso no `.icns`.
+- **Prévias em PNG.** O Brasa tem um modo `--snapshot` que desenha os painéis em vários estados, no claro e no escuro, sem abrir janela nenhuma. Todas as imagens deste post saíram daí, com dados de exemplo. Isso mudou como eu trabalho com agentes: eles conferem a interface sem roubar o foco da minha tela.
+- **Widget sem certificado pago.** O widget de mesa usa WidgetKit, que exige sandbox. Sem certificado de desenvolvedor não tem App Group, então o app grava um retrato num arquivo e o widget lê esse arquivo por uma exceção só de leitura do sandbox.
+
+---
+
+## O que aprendi
+
+**Comece pelo incômodo, não pela ideia.** Nenhum recurso do Brasa nasceu de um plano. Cada um nasceu de um incômodo que se repetia: o limite no meio da tarefa, o mouse rolando ao contrário, o Mac dormindo no KVM. Incômodo que volta toda semana é o melhor briefing que existe.
+
+**O sistema resiste, e cada resistência vira documentação.** A trava de energia descontinuada, a permissão que cai a cada assinatura, o App Group que pede certificado. Nenhuma dessas coisas está na primeira página da documentação. Todas viraram um parágrafo no README, para eu não tropeçar de novo daqui a seis meses.
+
+**Frase antes de número.** O módulo que eu mais olho não é nenhum anel, é o "Agora". Uma frase que responde à pergunta que eu tenho ("dá para continuar?") vale mais do que três percentuais.
+
+**Interface que se testa sem tela.** Desenhar o painel em PNG a partir de dados de exemplo virou o jeito de revisar a interface, tanto para mim quanto para os agentes.
+
+---
+
+## Conclusão
+
+Por enquanto, o Brasa é pessoal: o repositório é privado e muito amarrado ao meu setup. E acho que o ponto é esse: ele é bom justamente porque foi feito para uma pessoa só.
+
+Se você usa IA para programar, faça o exercício. Olhe para os apps pequenos que ficam abertos o dia inteiro e veja quanto de cada um você realmente usa. Se a resposta for "uma chave", talvez valha uma conversa com o seu agente. Antes, isso não compensaria o tempo. Hoje, talvez seja uma tarde.
+
+E se o seu Mac também dorme quando você troca o KVM, já sabe: `pmset disablesleep`.
